@@ -41,6 +41,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AddressUnreadableException.cs" />
+    <Compile Include="AddressUnwritableException.cs" />
+    <Compile Include="CPU6809.cs" />
     <Compile Include="Disasm6809.cs" />
     <Compile Include="IMemorySpace6809.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

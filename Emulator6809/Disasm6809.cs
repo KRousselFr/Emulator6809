@@ -133,7 +133,7 @@ namespace Emulator6809
             byte lo = ReadMem(this.regPC);
             this.regPC++;
             ushort addr = MakeWord(hi, lo);
-            return String.Format("${0:X4}", addr);
+            return String.Format(">${0:X4}", addr);
         }
 
         /* mode d'adressage direct : INSTR $xx  */
@@ -141,7 +141,7 @@ namespace Emulator6809
         {
             byte lo = ReadMem(this.regPC);
             this.regPC++;
-            return String.Format("${0:X2}", lo);
+            return String.Format("<${0:X2}", lo);
         }
 
         /* mode d'adressage indexé / indirect */
@@ -226,7 +226,7 @@ namespace Emulator6809
                 case 0x8: {
                     /* indexation avec déplacement constant sur 8 bits
                        (indirecte ou non) */
-                    byte displ = ReadMem(this.regPC);
+                    sbyte displ = (sbyte)(ReadMem(this.regPC));
                     this.regPC++;
                     if (indirect) {
                         return String.Format("[{0:+000;-000}, {1}]",
@@ -243,7 +243,7 @@ namespace Emulator6809
                     this.regPC++;
                     byte lo = ReadMem(this.regPC);
                     this.regPC++;
-                    ushort displ = MakeWord(hi, lo);
+                    short displ = (short)(MakeWord(hi, lo));
                     if (indirect) {
                         return String.Format("[{0:+00000;-00000}, {1}]",
                                              displ, idxReg);
@@ -264,7 +264,7 @@ namespace Emulator6809
                 case 0xc: {
                     /* relatif au PC avec déplacement constant sur 8 bits
                        (indirect ou non) */
-                    byte displ = ReadMem(this.regPC);
+                    sbyte displ = (sbyte)(ReadMem(this.regPC));
                     this.regPC++;
                     if (indirect) {
                         return String.Format("[{0:+000;-000}, PC]",
@@ -281,13 +281,13 @@ namespace Emulator6809
                     this.regPC++;
                     byte lo = ReadMem(this.regPC);
                     this.regPC++;
-                    ushort displ = MakeWord(hi, lo);
+                    short displ = (short)(MakeWord(hi, lo));
                     if (indirect) {
                         return String.Format("[{0:+00000;-00000}, PC]",
                                              displ);
                     } else {
                         return String.Format("{0:+00000;-00000}, PC",
-                                             displ, idxReg);
+                                             displ);
                     }
                 }
                 case 0xf: {
@@ -1532,7 +1532,7 @@ namespace Emulator6809
                     break;
             }
 
-            /* opcode inutilisé ! */
+            /* opcode invalide ! */
             if (instr == null) {
                 switch (this.uoPolicy) {
                     case UnknownOpcodePolicy.DoNop:

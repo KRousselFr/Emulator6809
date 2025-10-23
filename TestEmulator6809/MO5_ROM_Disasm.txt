@@ -1,0 +1,2755 @@
+
+****************************************************************
+***  DESASSEMBLAGE ROM MONITEUR DU THOMSON MO5, VERSION 1.0  ***
+****************************************************************
+
+    ~~~~~~~~~~~~~~~~~~~~~~~~
+    ~~~~ SECTION "INIT" ~~~~
+    ~~~~~~~~~~~~~~~~~~~~~~~~
+
+=== Initialisations page zéro moniteur
+======================================
+
+GLOBAL COLD
+;COLD
+F000 : 7F    22 00      : CLR >$2200 
+GLOBAL DEPART
+:DEPART
+F003 : C6    20         : LDB #$20 
+F005 : 1F    9B         : TFR B, DP 
+F007 : 10 CE 20 CC      : LDS #$20CC 
+F00B : 8E    20 76      : LDX #$2076 
+F00E : CE    A5 5A      : LDU #$A55A 
+F011 : 11 93 FE         : CMPU <$FE 
+F014 : 27    09         : BEQ +009  (-> $F01F) 
+F016 : DF    FE         : STU <$FE 
+F018 : CE    07 0C      : LDU #$070C 
+F01B : EF    84         : STU , X 
+F01D : EF    01         : STU +01, X 
+;WARM
+F01F : 4F               : CLR A 
+F020 : CE    F0 B3      : LDU #$F0B3 
+;INIPTR
+F023 : 37    20         : PULU Y 
+F025 : A7    82         : STA , -X 
+F027 : 10 AF 83         : STY , --X 
+F02A : 8C    20 5E      : CMPX #$205E 
+F02D : 2E    F4         : BGT -012  (-> $F023) 
+;SET$00
+F02F : A7    82         : STA , -X 
+F031 : 8C    20 19      : CMPX #$2019 
+F034 : 2E    F9         : BGT -007  (-> $F02F) 
+F036 : 43               : COM A 
+;SET$FF
+F037 : A7    82         : STA , -X 
+F039 : 8C    20 00      : CMPX #$2000 
+F03C : 2E    F9         : BGT -007  (-> $F037) 
+F03E : D7    1A         : STB <$1A 
+F040 : D7    1D         : STB <$1D 
+F042 : D7    1F         : STB <$1F 
+F044 : 0F    80         : CLR <$80 
+;DKTEST
+F046 : 8E    A0 00      : LDX #$A000 
+F049 : C6    55         : LDB #$55 
+F04B : EB    80         : ADDB , X+ 
+F04D : EB    80         : ADDB , X+ 
+F04F : EB    80         : ADDB , X+ 
+F051 : E1    84         : CMPB , X 
+F053 : 26    02         : BNE +002  (-> $F057) 
+F055 : 97    80         : STA <$80 
+
+=== Initialisation PIA système
+==============================
+
+;INIPIA
+F057 : CE    A7 C0      : LDU #$A7C0 
+F05A : 44               : LSR A 
+F05B : A7    41         : STA +01, U 
+F05D : 86    5F         : LDA #$5F 
+F05F : A7    C4         : STA , U 
+F061 : 8E    3E 3F      : LDX #$3E3F 
+F064 : AF    42         : STX +02, U 
+
+=== Initialisation PIA musique et jeux
+======================================
+
+F066 : 8E    04 04      : LDX #$0404 
+F069 : AF    4E         : STX +14, U 
+
+=== Initialisation de l'écran
+=============================
+
+F06B : BD    F8 A8      : JSR >$F8A8 
+F06E : CC    1F 40      : LDD #$1F40 
+F071 : DD    25         : STD <$25 
+F073 : 86    18         : LDA #$18 
+F075 : 97    20         : STA <$20 
+
+=== Lance la cartouche insérée,
+=== ou le BASIC résident en l'absence de cartouche
+==================================================
+
+F077 : 6E    9F EF FE   : JMP [$EFFE] 
+
+=== Aiguillage des appels à la ROM moniteur
+===========================================
+
+GLOBAL SWITCH
+;SWITCH
+F07B : A6    E4         : LDA , S 
+F07D : 84    F0         : ANDA #$F0 
+F07F : A7    E4         : STA , S 
+F081 : 1F    8A         : TFR A, CC 
+F083 : 86    20         : LDA #$20 
+F085 : 1F    8B         : TFR A, DP 
+F087 : E6    F8 0A      : LDB [+010, S] 
+F08A : C4    7F         : ANDB #$7F 
+F08C : 9E    6A         : LDX <$6A 
+F08E : EC    85         : LDD B, X 
+F090 : 8E    F0 9D      : LDX #$F09D  (;OUT)
+F093 : 34    16         : PSHS A/B/X 
+F095 : CE    A7 C0      : LDU #$A7C0 
+F098 : EC    65         : LDD +05, S 
+F09A : AE    68         : LDX +08, S 
+F09C : 39               : RTS 
+
+;OUT
+F09D : 1F    A8         : TFR CC, A 
+F09F : 84    8F         : ANDA #$8F 
+F0A1 : AA    E4         : ORA , S 
+F0A3 : A7    E4         : STA , S 
+F0A5 : AE    6A         : LDX +10, S 
+F0A7 : E6    80         : LDB , X+ 
+F0A9 : 2B    03         : BMI +003  (-> $F0AE) 
+F0AB : AF    6A         : STX +10, S 
+GLOBAL RTIPNT
+;RTIPNT
+F0AD : 3B               : RTI 
+
+;JMPTYP
+F0AE : 35    7F         : PULS CC/A/B/DP/X/Y/U 
+F0B0 : 32    62         : LEAS +02, S 
+GLOBAL RTSPNT
+F0B2 : 39               : RTS 
+
+=== Tables d'aiguillage et d'initialisation :
+=== adresses à mettre dans les pointeurs de la page zéro
+========================================================
+
+F0B3 : FC9E   ;TABAF
+F0B5 : FC9E   ;TABAF
+F0B7 : F2C2   ;TABASC
+F0B9 : F0C3   ;TBNTRY
+F0BB : F0AD   ;RTIPNT
+F0BD : F0AD   ;RTIPNT
+F0BF : F0AD   ;RTIPNT
+F0C1 : F07B   ;SWITCH
+
+=== Table de branchement standard
+=================================
+
+;TBNTRY
+F0C3 : F003   ;DEPART
+F0C5 : F773   ;PUTCH
+F0C7 : FB2C   ;FORME0
+F0C9 : FB23   ;FORME1
+F0CB : FAC5   ;BUZZER
+F0CD : F1FD   ;GETCH
+F0CF : F1D2   ;KEYTST
+F0D1 : F487   ;DRAWXY
+F0D3 : F3F0   ;PLOTXY
+F0D5 : F3A2   ;CHPLOT
+F0D7 : F3D5   ;GETPT
+F0D9 : F531   ;LPINT
+F0DB : F548   ;GETLP
+F0DD : F2FC   ;GETSC
+F0DF : F50B   ;JOYSTK
+F0E1 : F69B   ;NOTE
+F0E3 : F0FF   ;K7CONT
+F0E5 : F18B   ;K7MOT
+F0E7 : F713   ;PRCONT
+F0E9 : A004   ;DKCONT
+FOEB : A007   ;DKBOOT
+F0ED : A00A   ;DKFMT
+F0EF : A01C   ;ALLOB
+F0F1 : A019   ;ALLOD
+F0F3 : A016   ;ECRSE
+F0F5 : A022   ;FINTR
+F0F7 : A00D   ;LECFA
+F0F9 : A01F   ;MAJCL
+F0FB : A010   ;RECFI
+F0FD : A013   ;RECUP
+
+
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    ~~~~ SECTION "CASSETTE" ~~~~
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+=== Lecture cassette
+====================
+
+GLOBAL K7CONT
+;K7CONT
+F0FF : 1A    D0         : ORCC #$D0 
+F101 : 6D    63         : TST +03, S 
+F103 : 27    3D         : BEQ +061  (-> $F142) 
+;K7READ
+F105 : A6    C4         : LDA , U 
+F107 : C6    FF         : LDB #$FF 
+F109 : DD    44         : STD <$44 
+;SYNBIT
+F10B : 8D    5B         : BSR +091  (-> $F168) 
+F10D : 4D               : TST A 
+F10E : 26    FB         : BNE -005  (-> $F10B) 
+;SYNBYT
+F110 : 8D    56         : BSR +086  (-> $F168) 
+F112 : 96    45         : LDA <$45 
+F114 : 81    01         : CMPA #$01 
+F116 : 26    F8         : BNE -008  (-> $F110) 
+;WAIT3C
+F118 : 8D    67         : BSR +103  (-> $F181) 
+F11A : 81    01         : CMPA #$01 
+F11C : 27    FA         : BEQ -006  (-> $F118) 
+F11E : 81    3C         : CMPA #$3C 
+F120 : 26    E3         : BNE -029  (-> $F105) 
+F122 : 8D    5D         : BSR +093  (-> $F181) 
+F124 : 81    5A         : CMPA #$5A 
+F126 : 26    DD         : BNE -035  (-> $F105) 
+F128 : 8D    57         : BSR +087  (-> $F181) 
+F12A : A7    64         : STA +04, S 
+F12C : 8D    53         : BSR +083  (-> $F181) 
+F12E : A7    A0         : STA , Y+ 
+F130 : 97    41         : STA <$41 
+F132 : 6F    63         : CLR +03, S 
+;STBUFF
+F134 : 0A    41         : DEC <$41 
+F136 : 27    2F         : BEQ +047  (-> $F167) 
+F138 : 8D    47         : BSR +071  (-> $F181) 
+F13A : A7    A0         : STA , Y+ 
+F13C : AB    63         : ADDA +03, S 
+F13E : A7    63         : STA +03, S 
+F140 : 20    F2         : BRA -014  (-> $F134) 
+
+=== Ecriture cassette
+=====================
+
+;K7WRIT
+F142 : CC    01 10      : LDD #$0110 
+F145 : DD    40         : STD <$40 
+;ENTETE
+F147 : 96    40         : LDA <$40 
+F149 : 8D    64         : BSR +100  (-> $F1AF) 
+F14B : 0A    41         : DEC <$41 
+F14D : 26    F8         : BNE -008  (-> $F147) 
+F14F : 86    3C         : LDA #$3C 
+F151 : 8D    5C         : BSR +092  (-> $F1AF) 
+F153 : 86    5A         : LDA #$5A 
+F155 : 8D    58         : BSR +088  (-> $F1AF) 
+F157 : A6    64         : LDA +04, S 
+F159 : 8D    54         : BSR +084  (-> $F1AF) 
+F15B : A6    A4         : LDA , Y 
+F15D : 97    41         : STA <$41
+;WRDATA 
+F15F : A6    A0         : LDA , Y+ 
+F161 : 8D    4C         : BSR +076  (-> $F1AF) 
+F163 : 0A    41         : DEC <$41 
+F165 : 26    F8         : BNE -008  (-> $F15F) 
+
+;OUTRW
+F167 : 39               : RTS 
+
+=== Lecture d'un bit depuis la cassette
+=======================================
+
+;RDBITS
+F168 : A6    C4         : LDA , U 
+F16A : 98    44         : EORA <$44 
+F16C : 2A    FA         : BPL -006  (-> $F168) 
+F16E : 8E    00 41      : LDX #$0041 
+F171 : 8D    2F         : BSR +047  (-> $F1A2) 
+F173 : A6    C4         : LDA , U 
+F175 : 98    44         : EORA <$44 
+F177 : 2A    04         : BPL +004  (-> $F17D) 
+F179 : 03    44         : COM <$44 
+F17B : 4F               : CLR A 
+ (saute l'octet à l'adresse $F17C !)
+;RDDONE
+F17D : 43               : COM A
+F17E : 09    45         : ROL <$45 
+F180 : 39               : RTS 
+
+=== Lecture d'un octet depuis la cassette
+=========================================
+
+;RDBYTE
+F181 : C6    08         : LDB #$08 
+.RDECAL
+F183 : 8D    E3         : BSR -029  (-> $F168) 
+F185 : 5A               : DEC B 
+F186 : 26    FB         : BNE -005  (-> $F183) 
+F188 : 96    45         : LDA <$45 
+F18A : 39               : RTS 
+
+=== "MOTOR ON"
+==============
+
+GLOBAL K7MOT
+;K7MOT
+F18B : E6    42         : LDB +02, U 
+F18D : 44               : LSR A 
+F18E : 24    18         : BCC +024  (-> $F1A8) 
+F190 : 6D    C4         : TST , U 
+F192 : 2B    02         : BMI +002  (-> $F196) 
+F194 : 43               : COM A 
+F195 : 39               : RTS 
+
+;K7HERE
+F196 : C4    F7         : ANDB #$F7 
+F198 : E7    42         : STB +02, U 
+F19A : 44               : LSR A 
+F19B : 24    0A         : BCC +010  (-> $F1A7) 
+F19D : 8D    00         : BSR +000  (-> $F19F) 
+;WAITK7
+F19F : 8E    96 3D      : LDX #$963D 
+
+GLOBAL DELAI
+;DELAI
+F1A2 : 30    1F         : LEAX -01, X 
+F1A4 : 26    FC         : BNE -004  (-> $F1A2) 
+F1A6 : 4F               : CLR A 
+
+;OUTMOT
+F1A7 : 39               : RTS 
+
+=== "MOTOR OFF"
+=== (précédé d'une demi-seconde de temporisation)
+=================================================
+
+;K7OFF
+F1A8 : CA    08         : ORB #$08 
+F1AA : 8D    F3         : BSR -013  (-> $F19F) 
+F1AC : E7    42         : STB +02, U 
+F1AE : 39               : RTS 
+
+=== Ecriture d'un octet sur la cassette
+=======================================
+
+;WRBYTE
+F1AF : 97    45         : STA <$45 
+F1B1 : C6    08         : LDB #$08 
+;WRBITS
+F1B3 : 8D    16         : BSR +022  (-> $F1CB) 
+F1B5 : 8E    00 2D      : LDX #$002D 
+F1B8 : 8D    E8         : BSR -024  (-> $F1A2) 
+F1BA : 8E    00 32      : LDX #$0032 
+F1BD : 08    45         : LSL <$45 
+F1BF : 24    04         : BCC +004  (-> $F1C5) 
+F1C1 : 8D    08         : BSR +008  (-> $F1CB) 
+F1C3 : 30    1D         : LEAX -03, X 
+;WRZERO
+F1C5 : 8D    DB         : BSR -037  (-> $F1A2) 
+F1C7 : 5A               : DEC B 
+F1C8 : 26    E9         : BNE -023  (-> $F1B3) 
+F1CA : 39               : RTS 
+
+=== Inversion de niveau
+=======================
+
+;INVNIV
+F1CB : 86    40         : LDA #$40 
+F1CD : A8    C4         : EORA , U 
+F1CF : A7    C4         : STA , U 
+F1D1 : 39               : RTS 
+
+
+    ~~~~~~~~~~~~~~~~~~~~~~~~~
+    ~~~~ SECTION "GETCH" ~~~~
+    ~~~~~~~~~~~~~~~~~~~~~~~~~
+
+=== Contrôle rapide des touches et dématriçage du clavier
+=========================================================
+
+GLOBAL KEYTST
+;KEYTST
+F1D2 : DC    27         : LDD <$27 
+F1D4 : DD    44         : STD <$44 
+F1D6 : C6    72         : LDB #$72 
+;KBSCAN
+F1D8 : E7    41         : STB +01, U 
+F1DA : A6    41         : LDA +01, U 
+F1DC : 2B    12         : BMI +018  (-> $F1F0) 
+F1DE : 86    01         : LDA #$01 
+F1E0 : C1    72         : CMPB #$72 
+F1E2 : 27    0A         : BEQ +010  (-> $F1EE) 
+F1E4 : 48               : LSL A 
+F1E5 : C1    6A         : CMPB #$6A 
+F1E7 : 27    05         : BEQ +005  (-> $F1EE) 
+F1E9 : 48               : LSL A 
+F1EA : C1    70         : CMPB #$70 
+F1EC : 26    08         : BNE +008  (-> $F1F6) 
+;SAVFLG
+F1EE : 97    44         : STA <$44 
+;NXTKEY
+F1F0 : 0C    45         : INC <$45 
+F1F2 : C0    02         : SUBB #$02 
+F1F4 : 2A    E2         : BPL -030  (-> $F1D8) 
+;EXREAD
+F1F6 : DC    44         : LDD <$44 
+F1F8 : ED    63         : STD +03, S 
+F1FA : C1    3A         : CMPB #$3A 
+F1FC : 39               : RTS 
+
+=== Noyau de la gestion clavier
+===============================
+
+GLOBAL GETCH
+;GETCH
+F1FD : 0D    5D         : TST <$5D 
+F1FF : 26    38         : BNE +056  (-> $F239) 
+F201 : 3F               : SWI 
+F202 : 0C           ("SWI $0C" sur MO5 == appel à la primitive système KTST)
+;CONFRM
+F203 : 34    06         : PSHS A/B 
+F205 : 8E    02 71      : LDX #$0271 
+;WAIT
+F208 : 30    1F         : LEAX -01, X 
+F20A : 26    FC         : BNE -004  (-> $F208) 
+F20C : 3F               : SWI 
+F20D : 0C
+F20E : 10 A3 E1         : CMPD , S++ 
+F211 : 26    F0         : BNE -016  (-> $F203) 
+F213 : C1    3A         : CMPB #$3A 
+F215 : 27    27         : BEQ +039  (-> $F23E) 
+F217 : D1    37         : CMPB <$37 
+F219 : 26    10         : BNE +016  (-> $F22B) 
+F21B : 96    38         : LDA <$38 
+F21D : 91    76         : CMPA <$76 
+F21F : 25    1F         : BCS +031  (-> $F240) 
+F221 : 86    02         : LDA #$02 
+F223 : 95    19         : BITA <$19 
+F225 : 26    19         : BNE +025  (-> $F240) 
+F227 : BD    F8 9D      : JSR >$F89D 
+ (saute l'octet à l'adresse $F22A !)
+;NEWKEY
+F22B : 0F    38         : CLR <$38 
+F22D : D7    37         : STB <$37 
+F22F : 3F               : SWI 
+F230 : 08           ("SWI $0C" sur MO5 == appel à la primitive système BIIP)
+F231 : 04    44         : LSR <$44 
+F233 : 24    0E         : BCC +014  (-> $F243) 
+F235 : CA    80         : ORB #$80 
+F237 : 20    5E         : BRA +094  (-> $F297) 
+
+;MINACC
+F239 : D6    5D         : LDB <$5D 
+F23B : 4F               : CLR A 
+F23C : 20    57         : BRA +087  (-> $F295) 
+
+;EXITER
+F23E : 0F    37         : CLR <$37 
+;EXIT01
+F240 : 5F               : CLR B 
+F241 : 20    56         : BRA +086  (-> $F299) 
+
+;CONTRL
+F243 : 9E    6D         : LDX <$6D 
+F245 : E6    85         : LDB B, X 
+F247 : 04    44         : LSR <$44 
+F249 : 24    04         : BCC +004  (-> $F24F) 
+F24B : C4    BF         : ANDB #$BF 
+F24D : 20    4D         : BRA +077  (-> $F29C) 
+
+;SHIFT
+F24F : 04    44         : LSR <$44 
+F251 : 24    27         : BCC +039  (-> $F27A) 
+F253 : C1    20         : CMPB #$20 
+F255 : 25    40         : BCS +064  (-> $F297) 
+F257 : 26    09         : BNE +009  (-> $F262) 
+F259 : 86    80         : LDA #$80 
+F25B : 98    19         : EORA <$19 
+F25D : 97    19         : STA <$19 
+F25F : 5F               : CLR B 
+F260 : 20    35         : BRA +053  (-> $F297) 
+
+;NONINV
+F262 : C1    2F         : CMPB #$2F 
+F264 : 2E    04         : BGT +004  (-> $F26A) 
+F266 : CA    10         : ORB #$10 
+F268 : 20    2D         : BRA +045  (-> $F297) 
+
+;SUPA2F
+F26A : C1    39         : CMPB #$39 
+F26C : 2E    04         : BGT +004  (-> $F272) 
+F26E : C4    EF         : ANDB #$EF 
+F270 : 20    12         : BRA +018  (-> $F284) 
+
+;SUPA39
+F272 : C1    40         : CMPB #$40 
+F274 : 26    21         : BNE +033  (-> $F297) 
+F276 : C6    5E         : LDB #$5E 
+F278 : 20    0A         : BRA +010  (-> $F284) 
+
+;ONEKEY
+F27A : C1    41         : CMPB #$41 
+F27C : 25    06         : BCS +006  (-> $F284) 
+F27E : 96    19         : LDA <$19 
+F280 : 2A    15         : BPL +021  (-> $F297) 
+F282 : CB    20         : ADDB #$20 
+;TSTSS2
+F284 : 0D    5C         : TST <$5C 
+F286 : 27    14         : BEQ +020  (-> $F29C) 
+F288 : 86    0B         : LDA #$0B 
+:NXTACC
+F28A : 4A               : DEC A 
+F28B : 27    0A         : BEQ +010  (-> $F297) 
+F28D : 30    1D         : LEAX -03, X 
+F28F : E1    84         : CMPB , X 
+F291 : 26    F7         : BNE -009  (-> $F28A) 
+F293 : EC    01         : LDD +01, X 
+;STASS3
+F295 : 97    5D         : STA <$5D 
+;EXITOK
+F297 : 0F    5C         : CLR <$5C 
+;EXIT
+F299 : E7    64         : STB +04, S 
+F29B : 39               : RTS 
+
+;CTRLVE
+F29C : C1    16         : CMPB #$16 
+F29E : 26    F7         : BNE -009  (-> $F297) 
+F2A0 : 0C    5C         : INC <$5C 
+F2A2 : 20    F5         : BRA -011  (-> $F299) 
+
+=== Table de correspondance minuscules accentuées ou accents
+============================================================
+
+F2A4 : 30 61 41   : a accent grave <- touche '0'
+F2A7 : 36 65 42   : e accent aigü  <- touche '6'
+F2AA : 37 65 41   : e accent grave <- touche '7'
+F2AD : 38 75 41   : u accent grave <- touche '8'
+F2B0 : 39 63 4B   : c cédille      <- touche '9'
+
+GLOBAL TABSS2
+;TABSS2
+F2B3 : 63 00 4B   : Cédille            <- touche 'c'
+F2B6 : 20 00 41   : Accent grave       <- touche espace
+F2B9 : 27 00 42   : Accent aigü        <- touche apostrophe
+F2BC : 5E 00 43   : Accent circonflexe <- touche '@'
+F2BF : 22 00 48   : Tréma              <- touche '"'
+
+=== Table de correspondance touches clavier vers mots clefs BASIC
+=================================================================
+
+GLOBAL TABASC
+;TABASC
+F2C2 : 00   :  0 touche BASIC
+F2C3 : 00   :  1 touche SHIFT
+F2C4 : 02   :  2 touche STOP    => INSTR
+F2C5 : 16   :  3 touche ACC     => INKEY$
+F2C6 : 00   :  4 touche CNT
+F2C7 : 0D   :  5 touche ENTREE
+F2C8 : 0C   :  6 touche RAZ     => CLS
+F2C9 : 43   :  7 touche C       => CONSOLE
+F2CA : 0B   :  8 touche haut    => CONT
+F2CB : 57   :  9 touche W       => FRE
+F2CC : 31   : 10 touche 1 !     => GR$
+F2CD : 2B   : 11 touche + ;     => RESTORE
+F2CE : 41   : 12 touche A       => ATTRB
+F2CF : 2A   : 13 touche * :     => PLAY
+F2D0 : 51   : 14 touche Q       => RETURN
+F2D1 : 56   : 15 touche V       => LINE
+F2D2 : 08   : 16 touche gauche  => TRON
+F2D3 : 58   : 17 touche X       => EXEC
+F2D4 : 32   : 18 touche 2 "     => LEFT$
+F2D5 : 2D   : 19 touche - =     => DATA
+F2D6 : 5A   : 20 touche Z       => LOCATE
+F2D7 : 2F   : 21 touche / ?     => PRINT
+F2D8 : 53   : 22 touche S       => SCREEN
+F2D9 : 42   : 23 touche B       => BOX
+F2DA : 0A   : 24 touche bas     => SKIPF
+F2DB : 20   : 25 barre d'espace
+F2DC : 33   : 26 touche 3 #     => MID$
+F2DD : 30   : 27 touche 0 `     => READ
+F2DE : 45   : 28 touche E       => ELSE
+F2DF : 50   : 29 touche P       => PSET
+F2E0 : 44   : 30 touche D       => DELETE
+F2E1 : 4D   : 31 touche M       => MOTOR
+F2E2 : 09   : 32 touche droite  => TROFF
+F2E3 : 40   : 33 touche @ ^     => POKE
+F2E4 : 34   : 34 touche 4 $     => RIGHT$
+F2E5 : 39   : 35 touche 9 )     => STRIG
+F2E6 : 52   : 36 touche R       => RUN
+F2E7 : 4F   : 37 touche O       => ON
+F2E8 : 46   : 38 touche F       => FOR
+F2E9 : 4C   : 39 touche L       => LIST
+F2EA : 1E   : 40 touche "début" => MERGE
+F2EB : 2E   : 41 touche . >     => PEEK
+F2EC : 35   : 42 touche 5 %     => INPUT
+F2ED : 38   : 43 touche 8 (     => STICK
+F2EE : 54   : 44 touche T       => TO
+F2EF : 49   : 45 touche I       => IF
+F2F0 : 47   : 46 touche G       => GO
+F2F1 : 4B   : 47 touche K       => RND
+F2F2 : 1C   : 48 touche INS     => LOAD
+F2F3 : 2C   : 49 touche , <     => CLEAR
+F2F4 : 36   : 50 touche 6 &     => INPEN
+F2F5 : 37   : 51 touche 7 '     => PTRIG
+F2F6 : 59   : 52 touche Y       => STEP
+F2F7 : 55   : 53 touche U       => DIM
+F2F8 : 48   : 54 touche H       => SUB
+F2F9 : 4A   : 55 touche J       => THEN
+F2FA : 1D   : 56 touche EFF     => SAVE
+F2FB : 4E   : 57 touche N       => NEXT
+
+
+    ~~~~~~~~~~~~~~~~~~~~~~~~~
+    ~~~~ SECTION "GETSC" ~~~~
+    ~~~~~~~~~~~~~~~~~~~~~~~~~
+
+GLOBAL GETSC
+;GETSC
+F2FC : D6    19         : LDB <$19 
+F2FE : 34    04         : PSHS B 
+F300 : C6    14         : LDB #$14 
+F302 : 3F               : SWI 
+F303 : 02           ("SWI $02" sur MO5 == appel à la primitive système PUTC)
+F304 : 0D    5D         : TST <$5D 
+F306 : 2E    5D         : BGT +093  (-> $F365) 
+F308 : 2B    63         : BMI +099  (-> $F36D) 
+F30A : C6    1F         : LDB #$1F 
+F30C : E7    65         : STB +05, S 
+F30E : 8D    6C         : BSR +108  (-> $F37C) 
+F310 : EB    68         : ADDB +08, S 
+F312 : 1F    03         : TFR D, U 
+F314 : 9E    73         : LDX <$73 
+F316 : CC    61 08      : LDD #$6108 
+F319 : 8D    6A         : BSR +106  (-> $F385) 
+F31B : 25    3B         : BCS +059  (-> $F358) 
+F31D : 30    06         : LEAX +06, X 
+F31F : 33    C9 FF 10   : LEAU -00240, U 
+F323 : 64    65         : LSR +05, S 
+F325 : CC    04 02      : LDD #$0402 
+F328 : 8D    5B         : BSR +091  (-> $F385) 
+F32A : 24    43         : BCC +067  (-> $F36F) 
+
+F32C : E6    65         : LDB +05, S 
+F32E : C1    44         : CMPB #$44 
+F330 : 26    02         : BNE +002  (-> $F334) 
+F332 : C6    48         : LDB #$48 
+;OKCODE
+F334 : D7    5D         : STB <$5D 
+F336 : C6    60         : LDB #$60 
+F338 : E7    65         : STB +05, S 
+F33A : 9E    73         : LDX <$73 
+F33C : 30    89 02 08   : LEAX +00520, X 
+F340 : 33    C9 00 F0   : LEAU +00240, U 
+F344 : CC    1B 06      : LDD #$1B06 
+F347 : 8D    3C         : BSR +060  (-> $F385) 
+F349 : 25    03         : BCS +003  (-> $F34E) 
+F34B : C6    20         : LDB #$20 
+ (saute l'octet à l'adresse $F34D !)
+;MINACC
+F34E : E6    65         : LDB +05, S 
+F350 : D7    5C         : STB <$5C 
+F352 : C6    16         : LDB #$16 
+F354 : E7    65         : STB +05, S 
+F356 : 20    1F         : BRA +031  (-> $F377) 
+
+;TSTCED
+F358 : 6D    65         : TST +05, S 
+F35A : 2A    15         : BPL +021  (-> $F371) 
+F35C : C6    16         : LDB #$16 
+F35E : E7    65         : STB +05, S 
+F360 : CC    4B 63      : LDD #$4B63 
+F363 : 20    0E         : BRA +014  (-> $F373) 
+;EXIT02
+F365 : D6    5D         : LDB <$5D 
+F367 : E7    65         : STB +05, S 
+F369 : 86    80         : LDA #$80 
+F36B : 20    08         : BRA +008  (-> $F375) 
+
+;EXIT03
+F36D : 96    5C         : LDA <$5C 
+;NOCHAR
+F36F : A7    65         : STA +05, S 
+;EXIT01
+F371 : DC    27         : LDD <$27 
+;OUTSCR
+F373 : D7    5C         : STB <$5C 
+;FLAG02
+F375 : 97    5D         : STA <$5D 
+;RESTAT
+F377 : 35    02         : PULS A 
+F379 : 97    19         : STA <$19 
+F37B : 39               : RTS 
+
+=== Recherche de la position du caractère en mémoire forme
+==========================================================
+
+GLOBAL ADRPHY
+;ADRPHY
+F37C : C6    A0         : LDB #$A0 
+F37E : 3D               : MUL 
+F37F : 58               : LSL B 
+F380 : 49               : ROL A 
+F381 : C3    01 17      : ADDD #$0117 
+F384 : 39               : RTS 
+
+=== Comparaison entre les octets du générateur et l'écran
+=========================================================
+
+;COMPAR
+F385 : 34    56         : PSHS A/B/X/U 
+;NXTBYT
+F387 : A6    80         : LDA , X+ 
+F389 : A1    C4         : CMPA , U 
+F38B : 26    08         : BNE +008  (-> $F395) 
+F38D : 33    C8 D8      : LEAU -040, U 
+F390 : 5A               : DEC B 
+F391 : 26    F4         : BNE -012  (-> $F387) 
+F393 : 43               : COM A 
+ (saute l'octet à l'adresse $F394 !)
+;DIFFER
+F395 : 4F               : CLR A 
+F396 : 35    56         : PULS A/B/X/U 
+F398 : 6C    67         : INC +07, S 
+F39A : 30    08         : LEAX +08, X 
+F39C : 25    03         : BCS +003  (-> $F3A1) 
+F39E : 4A               : DEC A 
+F39F : 26    E4         : BNE -028  (-> $F385) 
+;EXITCP
+F3A1 : 39               : RTS 
+
+
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    ~~~~ SECTION "GRAPHIQUE" ~~~~
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+=== Points "caractères"
+=======================
+
+GLOBAL CHPLOT
+;CHPLOT
+F3A2 : 8D    21         : BSR +033  (-> $F3C5) 
+F3A4 : 96    2C         : LDA <$2C 
+F3A6 : 34    02         : PSHS A 
+F3A8 : 86    FF         : LDA #$FF 
+F3AA : 97    2C         : STA <$2C 
+F3AC : C6    1F         : LDB #$1F 
+F3AE : 3F               : SWI 
+F3AF : 02           ("SWI $02" sur MO5 == appel à la primitive système PUTC)
+F3B0 : 1F    20         : TFR Y, D 
+F3B2 : CB    40         : ADDB #$40 
+F3B4 : 3F               : SWI 
+F3B5 : 02           ("SWI $02" sur MO5 == appel à la primitive système PUTC)
+F3B6 : 1F    10         : TFR X, D 
+F3B8 : CB    40         : ADDB #$40 
+F3BA : 3F               : SWI 
+F3BB : 02           ("SWI $02" sur MO5 == appel à la primitive système PUTC)
+F3BC : D6    36         : LDB <$36 
+F3BE : 3F               : SWI 
+F3BF : 02           ("SWI $02" sur MO5 == appel à la primitive système PUTC)
+F3C0 : 35    02         : PULS A 
+F3C2 : 97    2C         : STA <$2C 
+F3C4 : 39               : RTS 
+
+=== Routines d'optimisation : "STYX" et "MASQUE"
+================================================
+
+;STYX
+F3C5 : 9F    32         : STX <$32 
+F3C7 : 10 9F 34         : STY <$34 
+F3CA : 39               : RTS 
+
+;MASK01
+F3CB : D6    33         : LDB <$33 
+;MASQUE
+F3CD : CE    F5 03      : LDU #$F503 
+;MASK02
+F3D0 : C4    07         : ANDB #$07 
+F3D2 : A6    C5         : LDA B, U 
+F3D4 : 39               : RTS 
+
+=== Charge le statut d'un point dans l'accumulateur B
+=====================================================
+
+GLOBAL GETPT
+;GETPT
+F3D5 : 8D    5B         : BSR +091  (-> $F432) 
+F3D7 : BD    FB 2C      : JSR >$FB2C 
+F3DA : E6    67         : LDB +07, S 
+F3DC : 8D    EF         : BSR -017  (-> $F3CD) 
+F3DE : E6    84         : LDB , X 
+F3E0 : 7C    A7 C0      : INC >$A7C0 
+F3E3 : A4    84         : ANDA , X 
+F3E5 : 26    04         : BNE +004  (-> $F3EB) 
+F3E7 : C4    0F         : ANDB #$0F 
+F3E9 : 53               : COM B 
+ (saute l'octet à l'adresse $F3EA !)
+;ZER
+F3EB : 8D    40         : BSR +064  (-> $F42D) 
+F3ED : E7    64         : STB +04, S 
+F3EF : 39               : RTS 
+
+=== Allumage ou extinction d'un point
+=====================================
+
+GLOBAL PLOTXY
+;PLOTXY
+F3F0 : 0D    36         : TST <$36 
+F3F2 : 26    AE         : BNE -082  (-> $F3A2) 
+F3F4 : 8D    CF         : BSR -049  (-> $F3C5) 
+F3F6 : 8D    3A         : BSR +058  (-> $F432) 
+F3F8 : 8D    D1         : BSR -047  (-> $F3CB) 
+
+=== Affichage forme et couleur
+==============================
+
+;FNDFRM
+F3FA : BD    FB 23      : JSR >$FB23 
+F3FD : D6    29         : LDB <$29 
+F3FF : 2B    0B         : BMI +011  (-> $F40C) 
+F401 : 8D    1B         : BSR +027  (-> $F41E) 
+F403 : 26    18         : BNE +024  (-> $F41D) 
+F405 : BD    FB 3A      : JSR >$FB3A 
+F408 : 86    0F         : LDA #$0F 
+F40A : 20    08         : BRA +008  (-> $F414) 
+
+;ZERO
+F40C : 43               : COM A 
+F40D : 8D    12         : BSR +018  (-> $F421) 
+F40F : 26    0C         : BNE +012  (-> $F41D) 
+F411 : 53               : COM B 
+F412 : 86    F0         : LDA #$F0 
+;SUITE
+F414 : BD    FB 2C      : JSR >$FB2C 
+F417 : 8D    08         : BSR +008  (-> $F421) 
+F419 : EB    84         : ADDB , X 
+F41B : E7    84         : STB , X 
+;EXEND
+F41D : 39               : RTS 
+
+=== Routines d'optimisation : "ORAX" et "ANDAX"
+===============================================
+
+;ORAX
+F41E : AA    84         : ORA , X 
+ (saute l'octet à l'adresse $F420 !)
+;ANDAX
+F421 : A4    84         : ANDA , X 
+F423 : A7    84         : STA , X 
+F425 : 96    19         : LDA <$19 
+F427 : 85    10         : BITA #$10 
+F429 : 39               : RTS 
+
+;LSRD1
+F42A : 44               : LSR A 
+F42B : 56               : ROR B 
+ (saute l'octet à l'adresse $F42C !)
+;LSRB4
+F42D : 54               : LSR B 
+F42E : 54               : LSR B 
+F42F : 54               : LSR B 
+F430 : 54               : LSR B 
+F431 : 39               : RTS 
+
+=== Calcul adresse physique
+===========================
+
+GLOBAL CALCUL
+;CALCUL
+F432 : 1F    20         : TFR Y, D 
+F434 : 86    28         : LDA #$28 
+F436 : 3D               : MUL 
+F437 : 1E    01         : EXG D, X 
+F439 : 8D    EF         : BSR -017  (-> $F42A) 
+F43B : 30    8B         : LEAX D, X 
+F43D : 39               : RTS 
+
+=== Tracé rapide de ligne horizontale
+=====================================
+
+;DRWLIG
+F43E : 9C    32         : CMPX <$32 
+F440 : 24    06         : BCC +006  (-> $F448) 
+F442 : DE    32         : LDU <$32 
+F444 : 1E    13         : EXG X, U 
+F446 : DF    32         : STU <$32 
+;NORMAL
+F448 : 34    10         : PSHS X 
+F44A : DC    32         : LDD <$32 
+F44C : 8D    DC         : BSR -036  (-> $F42A) 
+F44E : 34    04         : PSHS B 
+F450 : 9E    32         : LDX <$32 
+F452 : 8D    DE         : BSR -034  (-> $F432) 
+F454 : EC    61         : LDD +01, S 
+F456 : 8D    D2         : BSR -046  (-> $F42A) 
+F458 : E0    E0         : SUBB , S+ 
+F45A : 27    13         : BEQ +019  (-> $F46F) 
+F45C : D7    45         : STB <$45 
+F45E : BD    F3 CB      : JSR >$F3CB 
+F461 : 48               : LSL A 
+F462 : 4A               : DEC A 
+;AFFICH
+F463 : 8D    95         : BSR -107  (-> $F3FA) 
+F465 : 30    01         : LEAX +01, X 
+F467 : 86    FF         : LDA #$FF 
+F469 : 0A    45         : DEC <$45 
+F46B : 2E    F6         : BGT -010  (-> $F463) 
+F46D : 20    05         : BRA +005  (-> $F474) 
+;INBYTE
+F46F : BD    F3 CB      : JSR >$F3CB 
+F472 : 48               : LSL A 
+F473 : 4A               : DEC A 
+;OUTLIG
+F474 : 97    45         : STA <$45 
+F476 : EC    E4         : LDD , S 
+F478 : BD    F3 D0      : JSR >$F3D0 
+F47B : 40               : NEG A 
+F47C : 94    45         : ANDA <$45 
+F47E : BD    F3 FA      : JSR >$F3FA 
+F481 : AE    6A         : LDX +10, S 
+F483 : 9F    32         : STX <$32 
+F485 : 35    96         : PULS A/B/X/PC 
+
+=== Tracé d'une ligne (quelconque)
+==================================
+
+GLOBAL DRAWXY
+;DRAWXY
+F487 : CC    01 01      : LDD #$0101 
+F48A : 34    06         : PSHS A/B 
+F48C : 4F               : CLR A 
+F48D : E6    6B         : LDB +11, S 
+F48F : D0    35         : SUBB <$35 
+F491 : 22    09         : BHI +009  (-> $F49C) 
+F493 : 26    04         : BNE +004  (-> $F499) 
+F495 : 0D    36         : TST <$36 
+F497 : 27    A5         : BEQ -091  (-> $F43E) 
+;NEGINC
+F499 : 60    61         : NEG +01, S 
+F49B : 50               : NEG B 
+;D0
+F49C : DD    46         : STD <$46 
+F49E : EC    68         : LDD +08, S 
+F4A0 : 93    32         : SUBD <$32 
+F4A2 : 24    04         : BCC +004  (-> $F4A8) 
+F4A4 : 60    E4         : NEG , S 
+F4A6 : 8D    54         : BSR +084  (-> $F4FC) 
+;D1
+F4A8 : DD    40         : STD <$40 
+F4AA : 9E    32         : LDX <$32 
+F4AC : 10 9E 34         : LDY <$34 
+F4AF : 10 93 46         : CMPD <$46 
+F4B2 : 22    1B         : BHI +027  (-> $F4CF) 
+F4B4 : DC    46         : LDD <$46 
+F4B6 : 27    2B         : BEQ +043  (-> $F4E3) 
+
+F4B8 : 8D    42         : BSR +066  (-> $F4FC) 
+F4BA : 47               : ASR A 
+F4BB : 56               : ROR B 
+
+;TRACE2
+F4BC : 8D    36         : BSR +054  (-> $F4F4) 
+F4BE : D3    40         : ADDD <$40 
+F4C0 : 2B    04         : BMI +004  (-> $F4C6) 
+F4C2 : 8D    28         : BSR +040  (-> $F4EC) 
+F4C4 : 93    46         : SUBD <$46 
+;NXTR2
+F4C6 : 8D    1D         : BSR +029  (-> $F4E5) 
+F4C8 : 10 AC 6A         : CMPY +10, S 
+F4CB : 26    EF         : BNE -017  (-> $F4BC) 
+F4CD : 35    86         : PULS A/B/PC 
+
+;DRAW1
+F4CF : 8D    2B         : BSR +043  (-> $F4FC) 
+F4D1 : 47               : ASR A 
+F4D2 : 56               : ROR B 
+
+;TRACE1
+F4D3 : 8D    17         : BSR +023  (-> $F4EC) 
+F4D5 : D3    46         : ADDD <$46 
+F4D7 : 2B    04         : BMI +004  (-> $F4DD) 
+F4D9 : 8D    19         : BSR +025  (-> $F4F4) 
+F4DB : 93    40         : SUBD <$40 
+;NXTR1
+F4DD : 8D    06         : BSR +006  (-> $F4E5) 
+F4DF : AC    68         : CMPX +08, S 
+F4E1 : 26    F0         : BNE -016  (-> $F4D3) 
+;OUTDRW
+F4E3 : 35    86         : PULS A/B/PC 
+
+;CALLPL
+F4E5 : 34    76         : PSHS A/B/X/Y/U 
+F4E7 : BD    F3 F0      : JSR >$F3F0 
+F4EA : 35    F6         : PULS A/B/X/Y/U/PC 
+
+;CHANGX
+F4EC : 34    02         : PSHS A 
+F4EE : A6    63         : LDA +03, S 
+F4F0 : 30    86         : LEAX A, X 
+F4F2 : 35    82         : PULS A/PC 
+
+;CHANGY
+F4F4 : 34    02         : PSHS A 
+F4F6 : A6    64         : LDA +04, S 
+F4F8 : 31    A6         : LEAY A, Y 
+F4FA : 35    82         : PULS A/PC 
+
+;NEGATD
+F4FC : 43               : COM A 
+F4FD : 53               : COM B 
+F4FE : C3    00 01      : ADDD #$0001 
+F501 : 39               : RTS 
+
+=== Table des bits à allumer ou éteindre
+========================================
+
+F502 : 00
+;TABIT
+F503 : 80 40 20
+
+=== Table utilisé pour les octaves de la musique
+================================================
+
+GLOBAL OCTTBL
+OCTTBL;
+F506 : 10 08 04 02 01
+
+
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    ~~~~ SECTION "JOYSTICK" ~~~~
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+=== Primitive de traitement des joysticks
+=========================================
+
+GLOBAL JOYSTK
+;JOYSTK
+F50B : E6    4C         : LDB +12, U 
+F50D : 4D               : TST A 
+F50E : 27    06         : BEQ +006  (-> $F516) 
+F510 : 86    40         : LDA #$40 
+F512 : 54               : LSR B 
+F513 : 54               : LSR B 
+F514 : 54               : LSR B 
+F515 : 54               : LSR B 
+;SUIT10
+F516 : C4    0F         : ANDB #$0F 
+F518 : 8E    F5 21      : LDX #$F521 
+F51B : E6    85         : LDB B, X 
+F51D : E7    64         : STB +04, S 
+F51F : 8B    40         : ADDA #$40 
+F521 : A4    4D         : ANDA +13, U 
+F523 : 81    01         : CMPA #$01 
+F525 : 39               : RTS 
+
+=== Table de correspondance des valeurs positionnelles
+======================================================
+
+;TABJOY
+F526 : 04 
+F527 : 02
+F528 : 03 
+F529 : 00
+F52A : 06 
+F52B : 08
+F52C : 07 
+F52D : 00
+F52E : 05
+F52F : 01
+F530 : 00  
+
+
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    ~~~~ SECTION "LIGHTPEN" ~~~~
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+=== Lecture de l'interrupteur du crayon optique
+===============================================
+
+GLOBAL LPINT
+;LPINT
+F531 : A6    C4         : LDA , U 
+F533 : 84    20         : ANDA #$20
+F535 : 34    02         : PSHS A 
+F537 : 8E    04 E2      : LDX #$04E2 
+F53A : BD    F1 A2      : JSR >$F1A2 
+F53D : A6    C4         : LDA , U 
+F53F : 84    20         : ANDA #$20 
+F541 : A1    E0         : CMPA , S+ 
+F543 : 26    EC         : BNE -020  (-> $F531) 
+F545 : 8B    FF         : ADDA #$FF 
+F547 : 39               : RTS 
+
+
+=== Lecture du crayon optique (position sur l'écran)
+====================================================
+
+GLOBAL GETLP
+;GETLP
+F548 : 1A    50         : ORCC #$50 
+F54A : 9E    67         : LDX <$67 
+F54C : 34    10         : PSHS X 
+F54E : 8E    F6 44      : LDX #$F644 
+F551 : 9F    67         : STX <$67 
+F553 : 10 8E 20 CD      : LDY #$20CD 
+F557 : 86    FF         : LDA #$FF 
+;WTIHGH
+F559 : F6    A7 E7      : LDB >$A7E7 
+F55C : 2A    FB         : BPL -005  (-> $F559) 
+;WTILOW
+F55E : F6    A7 E7      : LDB >$A7E7 
+F561 : 2B    FB         : BMI -005  (-> $F55E) 
+F563 : A7    42         : STA +02, U 
+F565 : 8E    03 70      : LDX #$0370 
+F568 : BD    F1 A2      : JSR >$F1A2 
+F56B : 6D    C4         : TST , U 
+F56D : 8E    06 20      : LDX #$0620 
+F570 : 86    01         : LDA #$01 
+F572 : B7    A7 E4      : STA >$A7E4 
+
+F575 : 1C    BF         : ANDCC #$BF 
+
+=== Ouverture des interruptions FIRQ
+
+F577 : BD    F1 A2      : JSR >$F1A2 
+F57A : 1A    40         : ORCC #$40 
+
+=== Fin de la boucle d'attente FIRQ
+
+F57C : 1C    EF         : ANDCC #$EF 
+F57E : 86    FE         : LDA #$FE 
+F580 : A7    42         : STA +02, U 
+F582 : 7F    A7 E4      : CLR >$A7E4 
+
+=== Rectification des mesures hors fenêtre pour cohérence des tests
+
+F585 : 10 8C 20 D3      : CMPY #$20D3 
+F589 : 23    69         : BLS +105  (-> $F5F4) 
+F58B : 34    20         : PSHS Y 
+F58D : C6    10         : LDB #$10 
+;RECTIF
+F58F : AE    3D         : LDX -03, Y 
+F591 : 86    80         : LDA #$80 
+F593 : A5    A2         : BITA , -Y 
+F595 : 27    11         : BEQ +017  (-> $F5A8) 
+F597 : 44               : LSR A 
+F598 : A5    A4         : BITA , Y 
+F59A : 26    0C         : BNE +012  (-> $F5A8) 
+F59C : 44               : LSR A 
+F59D : A5    3F         : BITA -01, Y 
+F59F : 27    07         : BEQ +007  (-> $F5A8) 
+F5A1 : E5    3F         : BITB -01, Y 
+F5A3 : 27    03         : BEQ +003  (-> $F5A8) 
+F5A5 : 30    88 C0      : LEAX -064, X 
+;NXTMES
+F5A8 : AF    A3         : STX , --Y 
+F5AA : 10 8C 20 CD      : CMPY #$20CD 
+F5AE : 22    DF         : BHI -033  (-> $F58F) 
+F5B0 : 35    20         : PULS Y 
+F5B2 : 4F               : CLR A 
+F5B3 : D6    78         : LDB <$78 
+F5B5 : DD    44         : STD <$44 
+F5B7 : CE    20 D0      : LDU #$20D0 
+F5BA : 31    3D         : LEAY -03, Y 
+F5BC : 5F               : CLR B 
+;SAISIE
+F5BD : AE    C1         : LDX , U++ 
+F5BF : A6    C0         : LDA , U+ 
+F5C1 : 30    89 01 40   : LEAX +00320, X 
+F5C5 : AC    C4         : CMPX , U 
+F5C7 : 22    31         : BHI +049  (-> $F5FA) 
+F5C9 : 30    08         : LEAX +08, X 
+F5CB : AC    C4         : CMPX , U 
+F5CD : 25    2B         : BCS +043  (-> $F5FA) 
+F5CF : 30    18         : LEAX -08, X 
+F5D1 : AF    C4         : STX , U 
+F5D3 : A7    42         : STA +02, U 
+F5D5 : 5C               : INC B 
+F5D6 : 20    25         : BRA +037  (-> $F5FD) 
+
+;DROITE
+F5D8 : 6A    6B         : DEC +11, S 
+F5DA : 30    89 01 40   : LEAX +00320, X 
+;DECALC
+F5DE : 1F    10         : TFR X, D 
+F5E0 : 93    44         : SUBD <$44 
+F5E2 : 2B    0A         : BMI +010  (-> $F5EE) 
+F5E4 : 10 83 01 40      : CMPD #$0140 
+F5E8 : 25    06         : BCS +006  (-> $F5F0) 
+F5EA : CC    01 3F      : LDD #$013F 
+ (saute l'octet à l'adresse $F5ED !)
+
+;DEBLGN
+F5EE : DC    27         : LDD <$27 
+;VALIDE
+F5F0 : ED    68         : STD +08, S 
+F5F2 : 4F               : CLR A 
+ (saute l'octet à l'adresse $F5F3 !)
+
+;NOVALD
+FEF4 : 43               : COM A 
+F5F5 : 35    10         : PULS X 
+F5F7 : 9F    67         : STX <$67 
+F5F9 : 39               : RTS 
+
+;IGNORE
+F5FA : 5D               : TST B 
+F5FB : 26    0A         : BNE +010  (-> $F607) 
+;NXSAIS
+F5FD : 34    40         : PSHS U 
+F5FF : 10 AC E1         : CMPY , S++ 
+F602 : 26    B9         : BNE -071  (-> $F5BD) 
+F604 : 5D               : TST B 
+F605 : 27    ED         : BEQ -019  (-> $F5F4) 
+;RETABL
+F607 : 86    03         : LDA #$03 
+F609 : 3D               : MUL 
+F60A : 50               : NEG B 
+F60B : 33    C5         : LEAU B, U 
+F60D : EC    C4         : LDD , U 
+F60F : 10 83 FA 00      : CMPD #$FA00 
+F613 : 24    DF         : BCC -033  (-> $F5F4) 
+
+=== Calcul ligne et colonne
+===========================
+
+F615 : 6F    6A         : CLR +10, S 
+F617 : 6F    6B         : CLR +11, S 
+;BCLDIV
+F619 : 10 83 01 40      : CMPD #$0140 
+F61D : 25    07         : BCS +007  (-> $F626) 
+F61F : 83    01 40      : SUBD #$0140 
+F622 : 6C    6B         : INC +11, S 
+F624 : 20    F3         : BRA -013  (-> $F619) 
+
+;CALCUL
+F626 : 1F    01         : TFR D, X 
+F628 : E6    42         : LDB +02, U 
+F62A : C5    80         : BITB #$80 
+F62C : 27    B0         : BEQ -080  (-> $F5DE) 
+F62E : 8C    00 3F      : CMPX #$003F 
+F631 : 25    A5         : BCS -091  (-> $F5D8) 
+F633 : 8C    00 FF      : CMPX #$00FF 
+F636 : 23    A6         : BLS -090  (-> $F5DE) 
+F638 : 6C    6B         : INC +11, S 
+F63A : 20    B2         : BRA -078  (-> $F5EE) 
+
+
+=== Traitement SWI
+==================
+
+GLOBAL SWI1SB
+;SWI1SB
+F63C : 6E    9F 20 5E   : JMP [$205E] 
+
+=== Traitement FIRQ
+===================
+
+GLOBAL FIRQSB
+;FIRQSB
+F640 : 6E    9F 20 67   : JMP [$2067] 
+
+
+=== Saisie des mesures crayon optique
+=====================================
+
+;INTLP
+F644 : 10 8C 20 E4      : CMPY #$20E4 
+F648 : 24    0A         : BCC +010  (-> $F654) 
+F64A : FC    A7 E4      : LDD >$A7E4 
+F64D : ED    A1         : STD , Y++ 
+F64F : B6    A7 E6      : LDA >$A7E6 
+F652 : A7    A0         : STA , Y+ 
+;OUTTST
+F654 : 6D    C4         : TST , U 
+;RTKBINT
+F656 : 3B               : RTI 
+
+=== Traitement des IRQ
+======================
+
+GLOBAL IRQSUB
+;IRQSUB
+F657 : C6    20         : LDB #$20 
+F659 : 1F    9B         : TFR B, DP 
+F65B : CE    A7 C0      : LDU #$A7C0 
+F65E : D6    19         : LDB <$19 
+F660 : A6    43         : LDA +03, U 
+F662 : 2B    04         : BMI +004  (-> $F668) 
+F664 : 6E    9F 20 64   : JMP [$2064] 
+
+;KBINT
+F668 : 0C    31         : INC <$31 
+F66A : 96    31         : LDA <$31 
+F66C : 84    03         : ANDA #$03 
+F66E : 26    21         : BNE +033  (-> $F691) 
+F670 : C5    04         : BITB #$04 
+F672 : 27    0D         : BEQ +013  (-> $F681) 
+F674 : A6    C4         : LDA , U 
+F676 : 34    02         : PSHS A 
+F678 : 3F               : SWI 
+F679 : 06           ("SWI $06" sur MO5 == appel à la primitive système FRM1)
+F680 : BD    F8 B9      : JSR >$F8B9 
+F67D : 35    02         : PULS A 
+F67F : A7    C4         : STA , U 
+;NOCURS
+F681 : 0D    37         : TST <$37 
+F683 : 27    0C         : BEQ +012  (-> $F691) 
+F685 : 96    38         : LDA <$38 
+F687 : 91    76         : CMPA <$76 
+F689 : 27    02         : BEQ +002  (-> $F68D) 
+F68B : 0C    38         : INC <$38 
+;REPMAX
+F68D : C4    FD         : ANDB #$FD 
+F68F : D7    19         : STB <$19 
+;EXKBINT
+F691 : A6    41         : LDA +01, U 
+F693 : 0D    63         : TST <$63 
+F695 : 27    BF         : BEQ -065  (-> $F656) 
+F697 : 6E    9F 20 61   : JMP [$2061] 
+
+
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    ~~~~ SECTION "MUSIQUE" ~~~~
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+=== Joue une note de musique
+============================
+
+GLOBAL NOTE
+;NOTE
+F69B : 1A    D0         : ORCC #$D0 
+F69D : 96    3C         : LDA <$3C 
+F69F : D6    3A         : LDB <$3A 
+F6A1 : 34    02         : PSHS A 
+F6A3 : 44               : LSR A 
+F6A4 : 44               : LSR A 
+F6A5 : AB    E0         : ADDA , S+ 
+F6A7 : 3D               : MUL 
+F6A8 : 1F    02         : TFR D, Y 
+F6AA : E6    64         : LDB +04, S 
+F6AC : C4    0F         : ANDB #$0F 
+F6AE : 27    0C         : BEQ +012  (-> $F6BC) 
+F6B0 : 8E    F7 05      : LDX #$F705 
+F6B3 : E6    85         : LDB B, X 
+
+=== Correction pour l'octave supérieure
+=======================================
+
+F6B5 : 96    3F         : LDA <$3F 
+F6B7 : 4A               : DEC A 
+F6B8 : 26    02         : BNE +002  (-> $F6BC) 
+F6BA : C0    02         : SUBB #$02 
+
+;OCTBAS
+F6BC : 1F    98         : TFR B, A 
+
+;NOTE1
+F6BE : DD    44         : STD <$44 
+F6C0 : 27    10         : BEQ +016  (-> $F6D2) 
+F6C2 : 9E    3E         : LDX <$3E 
+;AGAIN1
+F6C4 : E6    41         : LDB +01, U 
+F6C6 : CA    01         : ORB #$01 
+F6C8 : E7    41         : STB +01, U 
+F6CA : D6    45         : LDB <$45 
+F6CC : 8D    20         : BSR +032  (-> $F6EE) 
+F6CE : 30    1F         : LEAX -01, X 
+F6D0 : 26    F2         : BNE -014  (-> $F6C4) 
+
+;NOTE0
+F6D2 : 9E    3E         : LDX <$3E 
+;AGAIN0
+F6D4 : E6    41         : LDB +01, U 
+F6D6 : C4    FE         : ANDB #$FE 
+F6D8 : E7    41         : STB +01, U 
+F6DA : D6    44         : LDB <$44 
+F6DC : 8D    10         : BSR +016  (-> $F6EE) 
+F6DE : 30    1F         : LEAX -01, X 
+F6E0 : 26    F2         : BNE -014  (-> $F6D4) 
+
+F6E2 : DC    44         : LDD <$44 
+F6E4 : 9B    3D         : ADDA <$3D 
+F6E6 : 25    EA         : BCS -022  (-> $F6D2) 
+F6E8 : D0    3D         : SUBB <$3D 
+F6EA : 22    D2         : BHI -046  (-> $F6BE) 
+F6EC : 20    E4         : BRA -028  (-> $F6D2) 
+
+;PLAY
+F6EE : D7    46         : STB <$46 
+;LOOP01
+F6F0 : 5A               : DEC B 
+F6F1 : 26    FD         : BNE -003  (-> $F6F0) 
+F6F3 : D6    46         : LDB <$46 
+F6F5 : 27    08         : BEQ +008  (-> $F6FF) 
+F6F7 : DB    47         : ADDB <$47 
+F6F9 : D1    47         : CMPB <$47 
+F6FB : D7    47         : STB <$47 
+F6FD : 24    04         : BCC +004  (-> $F703) 
+;SILENT
+F6FF : 31    3F         : LEAY -01, Y 
+F701 : 27    01         : BEQ +001  (-> $F704) 
+;EXPLAY
+F703 : 39               : RTS 
+
+;EXNOTE
+F704 : 35    86         : PULS A/B/PC 
+
+
+=== Table des fréquences de l'octave supérieure
+===============================================
+
+;TABNOT
+F706 : B0
+F707 : A5
+F708 : 9C
+F709 : 92
+F70A : 89
+F70B : 81
+F70C : 78
+F70D : 71
+F70E : 6A
+F70F : 63
+F710 : 5D
+F711 : 57
+F712 : 51
+
+
+    ~~~~~~~~~~~~~~~~~~~~~~~~~
+    ~~~~ SECTION "PARAL" ~~~~
+    ~~~~~~~~~~~~~~~~~~~~~~~~~
+
+=== Contrôleur d'interface parallèle
+====================================
+
+GLOBAL PRCONT
+;PRCONT
+F713 : CE    A7 E0      : LDU #$A7E0 
+F716 : 96    42         : LDA <$42 
+F718 : 8A    D0         : ORA #$D0 
+F71A : 1F    8A         : TFR A, CC 
+F71C : 25    23         : BCS +035  (-> $F741) 
+F71E : 29    21         : BVS +033  (-> $F741) 
+F720 : 27    05         : BEQ +005  (-> $F727) 
+;LOADPC
+F722 : 96    42         : LDA <$42 
+F724 : 97    43         : STA <$43 
+;OUTPR
+F726 : 39               : RTS 
+
+;OPNPR
+F727 : 8D    F9         : BSR -007  (-> $F722) 
+F729 : CC    3A FF      : LDD #$3AFF 
+F72C : A7    43         : STA +03, U 
+F72E : E7    41         : STB +01, U 
+F730 : 86    3E         : LDA #$3E 
+F732 : A7    43         : STA +03, U 
+F734 : A6    41         : LDA +01, U 
+F736 : 43               : COM A 
+F737 : A7    41         : STA +01, U 
+F739 : A1    41         : CMPA +01, U 
+F73B : 26    02         : BNE +002  (-> $F73F) 
+;EXITOK
+F73D : 4F               : CLR A 
+ (saute l'octet à l'adresse $F73E !)
+;EXITER
+F73F : 43               : COM A 
+F740 : 39               : RTS 
+
+;WRITE
+F741 : 86    04         : LDA #$04 
+F743 : 95    43         : BITA <$43 
+F745 : 27    F8         : BEQ -008  (-> $F73F) 
+F747 : 44               : LSR A 
+F748 : 95    42         : BITA <$42 
+F74A : 27    12         : BEQ +018  (-> $F75E) 
+F74C : 3F               : SWI 
+F74D : 06           ("SWI $06" sur MO5 == appel à la primitive système FRM1)
+F74E : D6    77         : LDB <$77
+F750 : 8D    10         : ASR >$8D10 
+F752 : 9E    27         : LDX <$27 
+;COPYLP
+F754 : E6    80         : LDB , X+ 
+F756 : 8D    0A         : BSR +010  (-> $F762) 
+F758 : 8C    1F 40      : CMPX #$1F40 
+F75B : 25    F7         : BCS -009  (-> $F754) 
+ (saute l'octet à l'adresse $F75D !)
+;PARALL
+F75E : 8D    02         : BSR +002  (-> $F762)
+F760 : 20    DB         : BRA -037  (-> $F73D) 
+
+;PARAL1
+F762 : 86    36         : LDA #$36 
+F764 : E7    41         : STB +01, U 
+F766 : A7    43         : STA +03, U 
+F768 : 8A    08         : ORA #$08 
+F76A : A7    43         : STA +03, U 
+F76C : A6    41         : LDA +01, U 
+
+;WTACK
+F76E : A6    43         : LDA +03, U 
+F770 : 2A    FC         : BPL -004  (-> $F76E) 
+F772 : 39               : RTS 
+
+
+    ~~~~~~~~~~~~~~~~~~~~~~~~~
+    ~~~~ SECTION "PUTCH" ~~~~
+    ~~~~~~~~~~~~~~~~~~~~~~~~~
+
+=== Noyau de la routine PUTCH
+=============================
+
+GLOBAL PUTCH
+;PUTCH
+F773 : 1A    D0         : ORCC #$D0 
+F775 : BD    FB 23      : JSR >$FB23 
+F778 : 8E    FC 54      : LDX #$FC54 
+F77B : 96    59         : LDA <$59 
+F77D : AD    96         : JSR [A, X] 
+F77F : 0F    2F         : CLR <$2F 
+F781 : 0F    2E         : CLR <$2E 
+
+;EXIT
+F783 : 39               : RTS 
+
+=== Séquence normale d'interprétation
+=====================================
+
+;NORMAL
+F784 : C1    20         : CMPB #$20 
+F786 : 24    2D         : BCC +045  (-> $F7B5) 
+F788 : C1    07         : CMPB #$07 
+F78A : 25    F7         : BCS -009  (-> $F783) 
+F78C : 4F               : CLR A 
+F78D : 58               : LSL B 
+F78E : 8E    FC 4E      : LDX #$FC4E 
+F791 : 6E    95         : JMP [B, X] 
+
+=== Décodage séquence SS2 (cédille et accents)
+==============================================
+
+;SS2EX
+F793 : 0F    59         : CLR <$59 
+F795 : C1    4B         : CMPB #$4B 
+F797 : 27    11         : BEQ +017  (-> $F7AA) 
+F799 : 86    02         : LDA #$02 
+F79B : 97    5B         : STA <$5B 
+F79D : 48               : LSL A 
+F79E : 9E    6D         : LDX <$6D 
+;NXTACC
+F7A0 : 30    1D         : LEAX -03, X 
+F7A2 : E1    02         : CMPB +02, X 
+F7A4 : 27    09         : BEQ +009  (-> $F7AF) 
+F7A6 : 4A               : DEC A 
+F7A7 : 26    F7         : BNE -009  (-> $F7A0) 
+ (saute l'octet à l'adresse $F7A9 !)
+;CCDILL
+F7AA : 86    80         : LDA #$80 
+F7AC : 97    5B         : STA <$5B 
+F7AE : 39               : RTS 
+
+;ENVOI
+F7AF : 1F    89         : TFR A, B 
+F7B1 : CA    80         : ORB #$80 
+F7B3 : 20    1F         : BRA +031  (-> $F7D4) 
+
+=== Routine principale d'affichage
+==================================
+
+;CHDIS
+F7B5 : 0F    2F         : CLR <$2F 
+F7B7 : 0D    5B         : TST <$5B 
+F7B9 : 2B    11         : BMI +017  (-> $F7CC) 
+F7BB : 27    06         : BEQ +006  (-> $F7C3) 
+F7BD : C1    61         : CMPB #$61 
+F7BF : 24    13         : BCC +019  (-> $F7D4) 
+;CHOUT
+F7C1 : 0F    5B         : CLR <$5B 
+;NONACC
+F7C3 : 5D               : TST B 
+F7C4 : 2A    0E         : BPL +014  (-> $F7D4) 
+F7C6 : DE    70         : LDU <$70 
+F7C8 : C0    80         : SUBB #$80 
+F7CA : 20    0C         : BRA +012  (-> $F7D8) 
+
+;CEDILL
+F7CC : C1    63         : CMPB #$63 
+F7CE : 26    F1         : BNE -015  (-> $F7C1) 
+F7D0 : D6    5B         : LDB <$5B 
+F7D2 : 0F    5B         : CLR <$5B 
+;DISP01
+F7D4 : DE    73         : LDU <$73 
+F7D6 : C0    20         : SUBB #$20 
+;DISP02
+F7D8 : 86    08         : LDA #$08 
+F7DA : 3D               : MUL 
+F7DB : 33    CB         : LEAU D, U 
+F7DD : 0F    30         : CLR <$30 
+F7DF : 10 9E 21         : LDY <$21 
+F7E2 : D6    2A         : LDB <$2A 
+F7E4 : C4    03         : ANDB #$03 
+F7E6 : 54               : LSR B 
+F7E7 : 26    1F         : BNE +031  (-> $F808) 
+
+=== Taille normale et double hauteur
+====================================
+
+F7E9 : 8D    4D         : BSR +077  (-> $F838) 
+;COPY
+F7EB : 37    02         : PULU A 
+F7ED : 8D    13         : BSR +019  (-> $F802) 
+F7EF : 24    02         : BCC +002  (-> $F7F3) 
+F7F1 : 8D    0F         : BSR +015  (-> $F802) 
+;NORSIZ
+F7F3 : 5A               : DEC B 
+F7F4 : 26    F5         : BNE -011  (-> $F7EB) 
+F7F6 : 8D    74         : BSR +116  (-> $F86C) 
+;COPY02
+F7F8 : 8D    08         : BSR +008  (-> $F802) 
+F7FA : 30    1F         : LEAX -01, X 
+F7FC : 26    FA         : BNE -006  (-> $F7F8) 
+F7FE : 20    33         : BRA +051  (-> $F833) 
+
+=== Affichage simple ou double en mémoire écran
+===============================================
+
+;STDY
+F800 : E7    21         : STB +01, Y 
+;STAY
+F802 : A7    A4         : STA , Y 
+F804 : 31    A8 D8      : LEAY -040, Y 
+F807 : 39               : RTS 
+
+=== Double taille et double largeur
+===================================
+
+;TDOUB
+F808 : 8D    2E         : BSR +046  (-> $F838) 
+;LCPY
+F80A : 37    02         : PULU A 
+F80C : 34    05         : PSHS CC/B 
+F80E : 97    44         : STA <$44 
+F810 : CC    80 00      : LDD #$8000 
+;EXPAND
+F813 : 04    44         : LSR <$44 
+F815 : 46               : ROR A 
+F816 : 56               : ROR B 
+F817 : 47               : ASR A 
+F818 : 56               : ROR B 
+F819 : 24    F8         : BCC -008  (-> $F813) 
+F81B : 35    01         : PULS CC 
+F81D : 8D    E1         : BSR -031  (-> $F800) 
+F81F : 24    02         : BCC +002  (-> $F823) 
+F821 : 8D    DD         : BSR -035  (-> $F800) 
+;LDOUB
+F823 : 35    04         : PULS B 
+F825 : 5A               : DEC B 
+F826 : 26    E2         : BNE -030  (-> $F80A) 
+F828 : 8D    42         : BSR +066  (-> $F86C) 
+;LCPY02
+F82A : 8D    D4         : BSR -044  (-> $F800) 
+F82C : 30    1F         : LEAX -01, X 
+F82E : 26    FA         : BNE -006  (-> $F82A) 
+ (saute l'octet à l'adresse $F830 !)
+;TRTOUT
+F831 : 32    62         : LEAS +02, S
+;TSTACC
+F833 : 0D    5B         : TST <$5B 
+F835 : 27    4D         : BEQ +077  (-> $F884) 
+F837 : 39               : RTS 
+
+=== Traitement accent
+=====================
+
+;ACCENP
+F838 : C6    08         : LDB #$08 
+F83A : 0D    5B         : TST <$5B 
+F83C : 27    06         : BEQ +006  (-> $F844) 
+F83E : 0A    5B         : DEC <$5B 
+F840 : 26    02         : BNE +002  (-> $F844) 
+F842 : 5A               : DEC B 
+F843 : 5A               : DEC B 
+;OUTACC
+F844 : 39               : RTS 
+
+=== "CANCEL"
+============
+
+;CANCEL
+F845 : DE    2B         : LDU <$2B 
+F847 : 9E    21         : LDX <$21 
+F849 : 10 9E 1B         : LDY <$1B 
+F84C : 96    2A         : LDA <$2A 
+F84E : C6    FF         : LDB #$FF 
+F850 : D7    2C         : STB <$2C 
+;CANNX
+F852 : C6    20         : LDB #$20 
+F854 : 3F               : SWI 
+F855 : 02           ("SWI $02" sur MO5 == appel à la primitive système PUTC)
+F856 : D6    1C         : LDB <$1C 
+F858 : C1    01         : CMPB #$01 
+F85A : 26    F6         : BNE -010  (-> $F852) 
+F85C : DF    2B         : STU <$2B 
+F85E : 9F    21         : STX <$21 
+F860 : 10 9F 1B         : STY <$1B 
+F863 : 97    2A         : STA <$2A 
+;FFTERM
+F865 : 86    FF         : LDA #$FF 
+F867 : A7    9F 20 1A   : STA [$201A] 
+F86B : 39               : RTS 
+
+=== Préparation du traitement couleur
+=====================================
+
+;COLTRT
+F86C : 8E    00 08      : LDX #$0008 
+F86F : 24    02         : BCC +002  (-> $F873) 
+F871 : 30    08         : LEAX +08, X 
+;BYTES8
+F873 : 86    40         : LDA #$40 
+F875 : 94    19         : ANDA <$19 
+F877 : 26    B8         : BNE -072  (-> $F831) 
+F879 : 10 9E 21         : LDY <$21 
+;MEMCOL
+F87C : BD    FB 2C      : JSR >$FB2C 
+;LDACOL
+F87F : 96    2B         : LDA <$2B 
+F881 : D6    2B         : LDB <$2B 
+F883 : 39               : RTS 
+
+;NXTPOS
+F884 : 96    2A         : LDA <$2A 
+F886 : 85    02         : BITA #$02 
+F888 : 27    04         : BEQ +004  (-> $F88E) 
+F88A : 0C    1C         : INC <$1C 
+F88C : 0C    22         : INC <$22 
+;ONELGR
+F88E : 20    55         : BRA +085  (-> $F8E5) 
+
+=== Curseur OFF
+===============
+
+;CURSOF
+F890 : 8D    1A         : BSR +026  (-> $F8AC) 
+F892 : 86    FB         : LDA #$FB 
+ (saute l'octet à l'adresse $F894 !)
+
+=== "Roll-up" et "roll-down" rapides
+====================================
+
+;ROLNOR
+F895 : 86    BF         : LDA #$BF 
+F897 : 94    19         : ANDA <$19 
+F899 : 20    04         : BRA +004  (-> $F89F) 
+
+;ROLFST
+F89B : 86    40         : LDA #$40 
+
+GLOBAL BRASHI
+;BRASHI
+F89D : 9A    19         : ORA <$19 
+;BRASHO
+F89F : 97    19         : STA <$19 
+F8A1 : 39               : RTS 
+
+=== Curseur ON
+==============
+
+;CURSON
+F8A2 : A6    64         : LDA +04, S 
+F8A4 : 84    EF         : ANDA #$EF 
+F8A6 : A7    64         : STA +04, S 
+
+GLOBAL CURSIN
+;CURSIN
+F8A8 : 86    04         : LDA #$04 
+F8AA : 20    F1         : BRA -015  (-> $F89D) 
+
+=== Effacement du curseur
+=========================
+
+GLOBAL EFFCUR
+;EFFCUR
+F8AC : 96    19         : LDA <$19 
+F8AE : 85    04         : BITA #$04 
+F8B0 : 27    0D         : BEQ +013  (-> $F8BF) 
+F8B2 : 0D    30         : TST <$30 
+F8B4 : 27    09         : BEQ +009  (-> $F8BF) 
+F8B6 : BD    FB 23      : JSR >$FB23 
+
+GLOBAL COMCUR
+;COMCUR
+F8B9 : 63    9F 20 21   : COM [$2021] 
+F8BD : 03    30         : COM <$30 
+;EFFOUT
+F8BF : 39               : RTS 
+
+=== "CARRIAGE RETURN"
+=====================
+
+;CARRET
+F8C0 : 8D    EA         : BSR -022  (-> $F8AC) 
+F8C2 : 0F    1C         : CLR <$1C 
+F8C4 : 0C    1C         : INC <$1C 
+F8C6 : 8D    75         : BSR +117  (-> $F93D) 
+F8C8 : 20    9B         : BRA -101  (-> $F865) 
+
+=== "LINE FEED"
+===============
+
+;LINFED
+F8CA : 8D    E0         : BSR -032  (-> $F8AC) 
+F8CC : 0C    1B         : INC <$1B 
+F8CE : 96    1B         : LDA <$1B 
+F8D0 : 91    20         : CMPA <$20 
+F8D2 : 23    69         : BLS +105  (-> $F93D) 
+F8D4 : 5F               : CLR B 
+F8D5 : 20    4B         : BRA +075  (-> $F922) 
+
+=== "RECORD SEPARATOR"
+======================
+
+;RECSEP
+F8D7 : 8D    D3         : BSR -045  (-> $F8AC) 
+;EFCNT
+F8D9 : 0F    1C         : CLR <$1C 
+F8DB : 0C    1C         : INC <$1C 
+F8DD : 20    5A         : BRA +090  (-> $F939) 
+
+=== "HORIZONTAL TABULATION"
+===========================
+
+;HORTAB
+F8DF : 8D    1B         : BSR +027  (-> $F8FC) 
+F8E1 : 86    FF         : LDA #$FF 
+F8E3 : 97    2E         : STA <$2E 
+;HORT
+F8E5 : 0C    1C         : INC <$1C 
+F8E7 : 96    1C         : LDA <$1C 
+F8E9 : 81    29         : CMPA #$29 
+F8EB : 27    18         : BEQ +024  (-> $F905) 
+F8ED : 81    2A         : CMPA #$2A 
+F8EF : 27    12         : BEQ +018  (-> $F903) 
+F8F1 : 0D    2F         : TST <$2F 
+F8F3 : 27    04         : BEQ +004  (-> $F8F9) 
+F8F5 : 31    01         : LEAY +01, X 
+F8F7 : 8D    6F         : BSR +111  (-> $F968) 
+;HTNOR
+F8F9 : 0C    22         : INC <$22 
+F8FB : 39               : RTS 
+
+;DPLCUR
+F8FC : 8D    AE         : BSR -082  (-> $F8AC) 
+F8FE : 9E    21         : LDX <$21 
+F900 : C6    08         : LDB #$08 
+F902 : 39               : RTS 
+
+;FNDWDT
+F903 : 0A    22         : DEC <$22 
+;FNRANG
+F905 : 0D    2F         : TST <$2F 
+F907 : 27    06         : BEQ +006  (-> $F90F) 
+F909 : 31    89 01 19   : LEAY +00281, X 
+F90D : 8D    59         : BSR +089  (-> $F968) 
+;FNNOR
+F90F : CC    01 01      : LDD #$0101 
+F912 : 97    1C         : STA <$1C 
+F914 : 0D    2E         : TST <$2E 
+F916 : 2B    0A         : BMI +010  (-> $F922) 
+F918 : 9E    1A         : LDX <$1A 
+F91A : D5    2A         : BITB <$2A 
+F91C : 27    02         : BEQ +002  (-> $F920) 
+F91E : 6F    1F         : CLR -01, X 
+;LIENOR
+F920 : 6F    84         : CLR , X 
+;LFFNR
+F922 : D4    2A         : ANDB <$2A 
+F924 : 58               : LSL B 
+F925 : 58               : LSL B 
+F926 : 58               : LSL B 
+F927 : 8E    FC 8E      : LDX #$FC8E 
+F92A : 3A               : ABX 
+F92B : 96    1B         : LDA <$1B 
+F92D : AB    84         : ADDA , X 
+F92F : 97    1B         : STA <$1B 
+F931 : 91    20         : CMPA <$20 
+F933 : 23    08         : BLS +008  (-> $F93D) 
+F935 : 0D    2C         : TST <$2C 
+F937 : 27    07         : BEQ +007  (-> $F940) 
+;RETHT
+F939 : 96    1E         : LDA <$1E 
+;OUTHT
+F93B : 97    1B         : STA <$1B 
+;JMPCAL
+F93D : 7E    FB DF      : JMP >$FBDF 
+
+;ROLLUP
+F940 : 9F    44         : STX <$44 
+F942 : E6    84         : LDB , X 
+;TBPL1
+F944 : 10 9E 1D         : LDY <$1D 
+;TBPL0
+F947 : 10 9C 1F         : CMPY <$1F 
+F94A : 24    06         : BCC +006  (-> $F952) 
+F94C : A6    21         : LDA +01, Y 
+F94E : A7    A0         : STA , Y+ 
+F950 : 20    F5         : BRA -011  (-> $F947) 
+
+;OUTTB
+F952 : 86    FF         : LDA #$FF 
+F954 : A7    A4         : STA , Y 
+F956 : 5A               : DEC B 
+F957 : 26    EB         : BNE -021  (-> $F944) 
+F959 : A6    84         : LDA , X 
+F95B : 48               : LSL A 
+F95C : 48               : LSL A 
+F95D : 48               : LSL A 
+F95E : 8E    FA 46      : LDX #$FA46 
+F961 : CE    FA 69      : LDU #$FA69 
+F964 : 8D    6F         : BSR +111  (-> $F9D5) 
+F966 : 20    3C         : BRA +060  (-> $F9A4) 
+
+;COPYCH
+F968 : A6    84         : LDA , X 
+F96A : 30    88 D8      : LEAX -040, X 
+F96D : BD    F8 02      : JSR >$F802 
+F970 : 5A               : DEC B 
+F971 : 26    F5         : BNE -011  (-> $F968) 
+F973 : 39               : RTS 
+
+=== "BACKSPACE"
+===============
+
+;BACKSP
+F974 : 8D    86         : BSR -122  (-> $F8FC) 
+F976 : 96    1C         : LDA <$1C 
+F978 : 81    01         : CMPA #$01 
+F97A : 2E    10         : BGT +016  (-> $F98C) 
+F97C : 0D    2F         : TST <$2F 
+F97E : 27    06         : BEQ +006  (-> $F986) 
+F980 : 31    89 FE E7   : LEAY -00281, X 
+F984 : 8D    E2         : BSR -030  (-> $F968) 
+;BACNOR
+F986 : C6    28         : LDB #$28 
+F988 : D7    1C         : STB <$1C 
+F98A : 20    10         : BRA +016  (-> $F99C) 
+
+;BSCONT
+F98C : 0D    2F         : TST <$2F 
+F98E : 27    04         : BEQ +004  (-> $F994) 
+F990 : 31    1F         : LEAY -01, X 
+F992 : 8D    D4         : BSR -044  (-> $F968) 
+;BSNOR
+F994 : 0A    22         : DEC <$22 
+F996 : 0A    1C         : DEC <$1C 
+F998 : 39               : RTS 
+
+=== "VERTICAL TABULATION"
+=========================
+
+;VERTAB
+F999 : BD    F8 AC      : JSR >$F8AC 
+;RETVT
+F99C : 96    1B         : LDA <$1B 
+F99E : 91    1E         : CMPA <$1E 
+F9A0 : 2F    06         : BLE +006  (-> $F9A8) 
+F9A2 : 4A               : DEC A 
+ (saute l'octet à l'adresse $F9A3 !)
+;VTCSR
+F9A4 : 96    20         : LDA <$20 
+F9A6 : 20    93         : BRA -109  (-> $F93B) 
+
+;OUTVT
+F9A8 : 0D    2C         : TST <$2C 
+F9AA : 26    F8         : BNE -008  (-> $F9A4) 
+F9AC : CC    08 01      : LDD #$0801 
+F9AF : D4    2A         : ANDB <$2A 
+F9B1 : 27    01         : BEQ +001  (-> $F9B4) 
+F9B3 : 48               : LSL A 
+;SLRD
+F9B4 : 34    02         : PSHS A 
+
+;TBD1
+F9B6 : 10 9E 1F         : LDY <$1F 
+;TDB0
+F9B9 : 10 9C 1D         : CMPY <$1D 
+F9BC : 23    06         : BLS +006  (-> $F9C4) 
+F9BE : E6    A2         : LDB , -Y 
+F9C0 : E7    21         : STB +01, Y 
+F9C2 : 20    F5         : BRA -011  (-> $F9B9) 
+
+;TBOUT
+F9C4 : C6    FF         : LDB #$FF 
+F9C6 : E7    A4         : STB , Y 
+F9C8 : 44               : LSR A 
+F9C9 : 85    08         : BITA #$08 
+F9CB : 26    E9         : BNE -023  (-> $F9B6) 
+F9CD : 35    02         : PULS A 
+F9CF : 8E    F9 FC      : LDX #$F9FC 
+F9D2 : CE    FA 27      : LDU #$FA27 
+
+=== Routine commune au "roll-up" et au "roll-down"
+==================================================
+
+;DROLL
+F9D5 : 34    52         : PSHS A/X/U 
+;DWNBCL
+F9D7 : 6A    E4         : DEC , S 
+F9D9 : 2B    1F         : BMI +031  (-> $F9FA) 
+F9DB : 3F               : SWI 
+F9DC : 06           ("SWI $06" sur MO5 == appel à la primitive système FRM1)
+F9DD : AD    F8 01      : JSR [1, S] 
+F9E0 : DC    27         : LDD <$27
+F9E2 : AD    F8 03      : JSR [3, S] 
+F9E5 : 86    40         : LDA #$40 
+F9E7 : 94    19         : ANDA <$19 
+F9E9 : 26    0B         : BNE +011  (-> $F9F6) 
+F9EB : 3F               : SWI 
+F9EC : 04           ("SWI $04" sur MO5 == appel à la primitive système FRM0)
+F9ED : AD    F8 01      : JSR [1, S] 
+F9F0 : BD    F8 7F      : JSR >$F87F 
+F9F3 : AD    F8 03      : JSR [3, S] 
+;ROWCH
+F9F6 : 0D    2D         : TST <$2D
+F9F8 : 26    DD         : BNE -035  (-> $F9D7) 
+;VEROUT
+F9FA : 35    D2         : PULS A/X/U/PC 
+
+=== Routines de "roll-down"
+===========================
+
+;DWNROL
+F9FC : 10 DF 46         : STS <$46 
+F9FF : DC    23         : LDD <$23 
+FA01 : C3    00 28      : ADDD #$0028 
+FA04 : DD    44         : STD <$44 
+FA06 : DE    25         : LDU <$25 
+FA08 : 32    C8 D1      : LEAS -047, U 
+FA0B : 0D    2D         : TST <$2D 
+FA0D : 26    04         : BNE +004  (-> $FA13) 
+FA0F : 32    E9 FE E8   : LEAS -00280, S 
+;NXTRUP
+FA13 : 35    3E         : PULS A/B/DP/X/Y 
+FA15 : 36    3E         : PSHU A/B/DP/X/Y 
+FA17 : 32    72         : LEAS -14, S 
+FA19 : 11 B3 20 44      : CMPU >$2044 
+FA1D : 22    F4         : BHI -012  (-> $FA13) 
+;BROL
+FA1F : 86    20         : LDA #$20 
+FA21 : 1F    8B         : TFR A, DP 
+;BROL2
+FA23 : 10 DE 46         : LDS <$46 
+FA26 : 39               : RTS 
+
+;DWNROK
+FA27 : 10 DF 46         : STS <$46 
+FA2A : 1F    01         : TFR D, X 
+FA2C : 1F    02         : TFR D, Y 
+FA2E : 1F    04         : TFR D, S 
+FA30 : DE    23         : LDU <$23 
+FA32 : 33    C8 28      : LEAU +040, U 
+FA35 : 0D    2D         : TST <$2D 
+FA37 : 26    04         : BNE +004  (-> $FA3D) 
+FA39 : 33    C9 01 18   : LEAU +00280, U 
+;NXTKUP
+FA3D : 36    76         : PSHU A/B/X/Y/S 
+FA3F : 11 93 23         : CMPU <$23 
+FA42 : 22    F9         : BHI -007  (-> $FA3D) 
+FA44 : 20    DD         : BRA -035  (-> $FA23) 
+
+=== Routines de "roll-up"
+=========================
+
+;ROLL
+FA46 : 10 DF 46         : STS <$46 
+FA49 : 10 DE 44         : LDS <$44 
+FA4C : EC    65         : LDD +05, S 
+FA4E : DE    23         : LDU <$23 
+FA50 : 32    C8 28      : LEAS +040, U 
+FA53 : 33    47         : LEAU +07, U 
+FA55 : 0D    2D         : TST <$2D 
+FA57 : 26    02         : BNE +002  (-> $FA5B) 
+FA59 : 32    EB         : LEAS D, S 
+;NXTROL
+FA5B : 35    3E         : PULS A/B/DP/X/Y 
+FA5D : 36    3E         : PSHU A/B/DP/X/Y 
+FA5F : 33    4E         : LEAU +14, U 
+FA61 : 11 BC 20 25      : CMPS >$2025 
+FA65 : 25    F4         : BCS -012  (-> $FA5B) 
+FA67 : 20    B6         : BRA -074  (-> $FA1F) 
+
+;ROCK
+FA69 : 10 DF 46         : STS <$46 
+FA6C : 1F    01         : TFR D, X 
+FA6E : 1F    02         : TFR D, Y 
+FA70 : 10 DE 44         : LDS <$44 
+FA73 : EC    63         : LDD +03, S 
+FA75 : DE    25         : LDU <$25 
+FA77 : 33    C8 E0      : LEAU -032, U 
+FA7A : 0D    2D         : TST <$2D 
+FA7C : 26    02         : BNE +002  (-> $FA80) 
+FA7E : 33    CB         : LEAU D, U 
+;ZROCK
+FA80 : 1F    10         : TFR X, D 
+FA82 : 1F    04         : TFR D, S 
+;NXTROK
+FA84 : 36    76         : PSHU A/B/X/Y/S 
+FA86 : 33    C8 10      : LEAU +016, U 
+FA89 : 11 93 25         : CMPU <$25 
+FA8C : 23    F6         : BLS -010  (-> $FA84) 
+FA8E : 20    93         : BRA -109  (-> $FA23) 
+
+=== "FORM FEED"
+===============
+
+;FORFED
+FA90 : 0F    30         : CLR <$30 
+FA92 : DC    27         : LDD <$27 
+;EFCONT
+FA94 : 1F    01         : TFR D, X 
+FA96 : 1F    02         : TFR D, Y 
+FA98 : DE    25         : LDU <$25 
+;NXTEFF
+FA9A : 36    36         : PSHU A/B/X/Y 
+FA9C : 36    30         : PSHU X/Y 
+FA9E : 11 93 23         : CMPU <$23 
+FAA1 : 2E    F7         : BGT -009  (-> $FA9A) 
+FAA3 : CC    40 01      : LDD #$4001 
+FAA6 : 94    19         : ANDA <$19 
+FAA8 : 26    0A         : BNE +010  (-> $FAB4) 
+FAAA : F4    A7 C0      : ANDB >$A7C0 
+FAAD : 27    05         : BEQ +005  (-> $FAB4) 
+FAAF : BD    F8 7C      : JSR >$F87C 
+FAB2 : 20    E0         : BRA -032  (-> $FA94) 
+
+;OUTFF
+FAB4 : 9E    1D         : LDX <$1D 
+FAB6 : 86    FF         : LDA #$FF 
+;TABFF
+FAB8 : A7    80         : STA , X+ 
+FABA : 9C    1F         : CMPX <$1F 
+FABC : 23    FA         : BLS -006  (-> $FAB8) 
+FABE : 7E    F8 D9      : JMP >$F8D9 
+
+=== Bip du clavier
+==================
+
+;DRIING
+FAC1 : A6    64         : LDA +04, S 
+FAC3 : 1F    8A         : TFR A, CC 
+
+GLOBAL BUZZER
+;BUZZER
+FAC5 : 96    19         : LDA <$19 
+FAC7 : 85    08         : BITA #$08 
+FAC9 : 26    0D         : BNE +013  (-> $FAD8) 
+FACB : 4F               : CLR A 
+;BEEP
+FACC : B7    A7 C1      : STA >$A7C1 
+FACF : 4C               : INC A 
+FAD0 : 5F               : CLR B 
+;WTBEEP
+FAD1 : 5C               : INC B 
+FAD2 : 2A    FD         : BPL -003  (-> $FAD1) 
+FAD4 : 81    11         : CMPA #$11 
+FAD6 : 26    F4         : BNE -012  (-> $FACC) 
+;EXBUZZ
+FAD8 : 39               : RTS 
+
+=== Commandes d'incrustation
+============================
+
+GLOBAL INCRUS
+;INCRUS
+FAD9 : B6    A7 C3      : LDA >$A7C3 
+FADC : 84    F7         : ANDA #$F7 
+FADE : 20    05         : BRA +005  (-> $FAE5) 
+
+GLOBAL NOINCR
+;NOINCR
+FAE0 : B6    A7 C3      : LDA >$A7C3 
+FAE3 : 8A    08         : ORA #$08 
+;INCOUT
+FAE5 : B7    A7 C3      : STA >$A7C3 
+FAE8 : 39               : RTS 
+
+=== Attributs de taille
+=======================
+
+;SIZE
+FAE9 : C4    03         : ANDB #$03 
+FAEB : 96    2A         : LDA <$2A 
+FAED : 84    FC         : ANDA #$FC 
+FAEF : 8D    1F         : BSR +031  (-> $FB10) 
+FAF1 : 97    2A         : STA <$2A 
+FAF3 : 39               : RTS 
+
+=== Inversion de fond et de forme
+=================================
+
+;FSINV
+FAF4 : 9E    23         : LDX <$23 
+FAF6 : 3F               : SWI 
+FAF7 : 04           ("SWI $04" sur MO5 == appel à la primitive système FRM0)
+;NXTINV
+FAF8 : A6    84         : LDA , X 
+FAFA : 8D    0C         : BSR +012  (-> $FB08) 
+FAFC : A7    80         : STA , X+ 
+FAFE : 9C    25         : CMPX <$25 
+FB00 : 26    F6         : BNE -010  (-> $FAF8) 
+;INVERT
+FB02 : 96    2B         : LDA <$2B 
+FB04 : 8D    02         : BSR +002  (-> $FB08) 
+FB06 : 20    6F         : BRA +111  (-> $FB77) 
+
+;INCOM
+FB08 : 1F    89         : TFR A, B 
+FB0A : 44               : LSR A 
+FB0B : 44               : LSR A 
+FB0C : 44               : LSR A 
+FB0D : 44               : LSR A 
+FB0E : 8D    2A         : BSR +042  (-> $FB3A) 
+;ADDBA
+FB10 : 34    04         : PSHS B 
+FB12 : AB    E0         : ADDA , S+ 
+FB14 : 39               : RTS 
+
+=== Tour de l'écran
+===================
+
+;TOUR
+FB15 : 58               : LSL B 
+FB16 : C4    1E         : ANDB #$1E 
+FB18 : B6    A7 C0      : LDA >$A7C0 
+FB1B : 84    E1         : ANDA #$E1 
+FB1D : 8D    F1         : BSR -015  (-> $FB10) 
+FB1F : B7    A7 C0      : STA >$A7C0 
+FB22 : 39               : RTS 
+
+=== Mise en mémoire "caractère"
+===============================
+
+GLOBAL FORME1
+;FORME1
+FB23 : 34    02         : PSHS A 
+FB25 : 86    01         : LDA #$01 
+FB27 : BA    A7 C0      : ORA >$A7C0 
+FB2A : 20    07         : BRA +007  (-> $FB33) 
+
+=== Mise en mémoire "couleur"
+=============================
+
+GLOBAL FORME0
+;FORME0
+FB2C : 34    02         : PSHS A 
+FB2E : 86    FE         : LDA #$FE 
+FB30 : B4    A7 C0      : ANDA >$A7C0 
+;STAPRA
+FB33 : B7    A7 C0      : STA >$A7C0 
+FB36 : 35    82         : PULS A/PC 
+
+=== Routines d'optimisation : "CHMASK" et "LSLB4"
+=================================================
+
+;CHMASK
+FB38 : 86    0F         : LDA #$0F 
+
+GLOBAL LSLB4
+;LSLB4
+FB3A : 58               : LSL B 
+FB3B : 58               : LSL B 
+FB3C : 58               : LSL B 
+FB3D : 58               : LSL B 
+FB3E : 39               : RTS 
+
+=== Couleur du fond
+===================
+
+;FSBACK
+FB3F : C4    0F         : ANDB #$0F 
+FB41 : 86    F0         : LDA #$F0 
+FB43 : 34    02         : PSHS A 
+FB45 : 8D    08         : BSR +008  (-> $FB4F) 
+FB47 : 35    02         : PULS A 
+;BACK0
+FB49 : C4    0F         : ANDB #$0F 
+FB4B : 86    F0         : LDA #$F0 
+FB4D : 20    24         : BRA +036  (-> $FB73) 
+
+=== Traitement commun couleur fond ou forme
+===========================================
+
+;SAMCOL
+FB4F : 3F               : SWI 
+FB50 : 04           ("SWI $04" sur MO5 == appel à la primitive système FRM0)
+FB51 : D7    44         : STB <$44
+FB53 : D7    45         : STB <$45 
+FB55 : 9E    23         : LDX <$23 
+;NXTCOL
+FB57 : EC    84         : LDD , X 
+FB59 : A4    62         : ANDA +02, S 
+FB5B : E4    62         : ANDB +02, S 
+FB5D : D3    44         : ADDD <$44 
+FB5F : ED    81         : STD , X++ 
+FB61 : 9C    25         : CMPX <$25 
+FB63 : 26    F2         : BNE -014  (-> $FB57) 
+FB65 : D6    44         : LDB <$44 
+FB67 : 39               : RTS 
+
+=== Couleur du caractère
+========================
+
+;FSCHAR
+FB68 : 8D    CE         : BSR -050  (-> $FB38) 
+FB6A : 34    02         : PSHS A 
+FB6C : 8D    E1         : BSR -031  (-> $FB4F) 
+FB6E : 35    02         : PULS A 
+ (saute l'octet à l'adresse $FB70 !)
+;CHCOL
+FB71 : 8D    C5         : BSR -059  (-> $FB38) 
+;COLBRA
+FB73 : 94    2B         : ANDA <$2B 
+FB75 : 8D    99         : BSR -103  (-> $FB10) 
+;STACOL
+FB77 : 97    2B         : STA <$2B 
+FB79 : 39               : RTS 
+
+=== "Scroll"
+============
+
+;SCROLL
+FB7A : 0F    2C         : CLR <$2C 
+FB7C : C1    7A         : CMPB #$7A 
+FB7E : 27    08         : BEQ +008  (-> $FB88) 
+FB80 : 0F    2D         : CLR <$2D 
+FB82 : 54               : LSR B 
+FB83 : 24    05         : BCC +005  (-> $FB8A) 
+FB85 : 03    2D         : COM <$2D 
+ (saute l'octet à l'adresse $FB87 !)
+;MPAGE
+FB88 : 03    2C         : COM <$2C 
+;ROLOUT
+FB8A : 39               : RTS 
+
+=== Positionnement des séquences
+================================
+
+;SS2CH
+FB8B : 4C               : INC A 
+;USCH
+FB8C : 4C               : INC A 
+;ESCCH
+FB8D : 4C               : INC A 
+FB8E : 48               : LSL A 
+FB8F : 97    59         : STA <$59 
+FB91 : 39               : RTS 
+
+=== "UNIT SEPARATOR"
+===================S=
+
+;UNSEP
+FB92 : 0D    5A         : TST <$5A 
+FB94 : 26    03         : BNE +003  (-> $FB99) 
+FB96 : D7    5A         : STB <$5A 
+FB98 : 39               : RTS 
+;NXTPAR
+FB99 : BD    F8 AC      : JSR >$F8AC 
+FB9C : C1    40         : CMPB #$40 
+FB9E : 2D    0E         : BLT +014  (-> $FBAE) 
+FBA0 : C4    3F         : ANDB #$3F 
+FBA2 : D7    1C         : STB <$1C 
+FBA4 : D6    5A         : LDB <$5A 
+FBA6 : C4    3F         : ANDB #$3F 
+FBA8 : D7    1B         : STB <$1B 
+FBAA : 8D    33         : BSR +051  (-> $FBDF) 
+FBAC : 20    2C         : BRA +044  (-> $FBDA) 
+
+;INFA40
+FBAE : C1    30         : CMPB #$30 
+FBB0 : 2C    28         : BGE +040  (-> $FBDA) 
+FBB2 : DE    1B         : LDU <$1B 
+FBB4 : 9E    21         : LDX <$21 
+FBB6 : 34    50         : PSHS X/U 
+FBB8 : C1    20         : CMPB #$20 
+FBBA : 2D    0D         : BLT +013  (-> $FBC9) 
+FBBC : 8D    2B         : BSR +043  (-> $FBE9) 
+FBBE : D7    1E         : STB <$1E 
+FBC0 : 8D    1D         : BSR +029  (-> $FBDF) 
+FBC2 : 83    01 18      : SUBD #$0118 
+FBC5 : DD    23         : STD <$23 
+FBC7 : 20    0B         : BRA +011  (-> $FBD4) 
+
+;BOTTOM
+FBC9 : 8D    1E         : BSR +030  (-> $FBE9) 
+FBCB : D7    20         : STB <$20 
+FBCD : 8D    10         : BSR +016  (-> $FBDF) 
+FBCF : C3    00 28      : ADDD #$0028 
+FBD2 : DD    25         : STD <$25 
+;EXITW
+FBD4 : 35    50         : PULS X/U 
+FBD6 : DF    1B         : STU <$1B 
+FBD8 : 9F    21         : STX <$21 
+;EXITUS
+FBDA : 0F    5A         : CLR <$5A 
+FBDC : 0F    59         : CLR <$59 
+FBDE : 39               : RTS 
+
+=== Calcul adresse physique pointeur écran
+==========================================
+
+;SCRCAL
+FBDF : 96    1B         : LDA <$1B 
+FBE1 : BD    F3 7C      : JSR >$F37C 
+FBE4 : DB    1C         : ADDB <$1C 
+FBE6 : DD    21         : STD <$21 
+FBE8 : 39               : RTS 
+
+=== Conversion code coordonnées en binaire
+==========================================
+
+;DCONV
+FBE9 : 0F    1C         : CLR <$1C 
+FBEB : 0C    1C         : INC <$1C 
+FBED : C4    0F         : ANDB #$0F 
+FBEF : D7    1B         : STB <$1B 
+FBF1 : 96    5A         : LDA <$5A 
+FBF3 : 84    0F         : ANDA #$0F 
+FBF5 : C6    0A         : LDB #$0A 
+FBF7 : 3D               : MUL 
+FBF8 : DB    1B         : ADDB <$1B 
+FBFA : D7    1B         : STB <$1B 
+FBFC : 39               : RTS 
+
+=== Décodage des séquences d'échappement
+========================================
+
+;ESCAPE
+FBFD : 86    80         : LDA #$80 
+FBFF : C1    20         : CMPB #$20 
+FC01 : 27    1C         : BEQ +028  (-> $FC1F) 
+FC03 : C1    40         : CMPB #$40 
+FC05 : 2D    1C         : BLT +028  (-> $FC23) 
+;ATDEC
+FC07 : CE    FC 24      : LDU #$FC24 
+FC0A : 0D    2A         : TST <$2A 
+FC0C : 2B    02         : BMI +002  (-> $FC10) 
+FC0E : 33    4F         : LEAU +15, U 
+;SELECT
+FC10 : E1    C4         : CMPB , U 
+FC12 : 33    43         : LEAU +03, U 
+FC14 : 25    FA         : BCS -006  (-> $FC10) 
+FC16 : AD    D3         : JSR [, --U] 
+;NOATR
+FC18 : 0F    59         : CLR <$59 
+FC1A : 86    7F         : LDA #$7F 
+FC1C : 94    2A         : ANDA <$2A 
+ (saute l'octet à l'adresse $FC1E !)
+;FULSCR
+FC1F : 9A    2A         : ORA <$2A 
+FC21 : 97    2A         : STA <$2A 
+;OUTESC
+FC23 : 39               : RTS 
+
+
+=== Tables de branchement
+=========================
+
+;TABAFS
+FC24 : 7C
+FC25 : FC18   ;NOATR
+FC27 : 7B
+FC28 : FAF4   ;FSINV
+FC2A : 60
+FC2B : FC18   ;NOATR
+FC2C : 50
+FC2E : FB3F   ;FSBACK
+FC2F : 40
+FC31 : FB68   ;FSCHAR
+
+;TABATR
+FC32 : 7C
+FC34 : FC18   ;NOATR
+FC35 : 7B
+FC37 : FB02   ;INVERT
+FC38 : 78
+FC3A : FB7A   ;SCROLL
+FC3B : 77
+FC3D : FAD9   ;INCRUS
+FC3E : 76
+FC40 : FAE0   ;NOINCR
+FC42 : 75
+FC43 : F89B   ;ROLFST
+FC45 : 74
+FC46 : F895   ;ROLNOR
+FC48 : 70
+FC49 : FAE9   ;SIZE
+FC4B : 60
+FC4C : FB15   ;TOUR
+FC4E : 50
+FC4F : FB49   ;BACK0
+FC51 : 40
+FC52 : FB71   ;CHCOL
+
+=== Table des séquences
+=======================
+
+TABSEQ;
+FC54 : F784   ;NORMAL
+FC56 : FBFD   ;ESCAPE
+FC58 : FB92   ;UNSEP
+FC5A : F793   ;SS2EX
+
+=== Table des codes interprétables
+==================================
+
+;TABDEC
+FC5C : FAC1   ;DRIING
+FC5E : F974   ;BACKSP
+FC60 : F8DF   ;HORTAB
+FC62 : F8CA   ;LINFED
+FC64 : F999   ;VERTAB
+FC66 : FA90   ;FORFED
+FC68 : F8C0   ;CARRET
+FC6A : F783   ;EXIT
+FC6C : F783   ;EXIT
+FC6E : F783   ;EXIT
+FC70 : F8A2   ;CURSON
+FC72 : F783   ;EXIT
+FC74 : F783   ;EXIT
+FC76 : F890   ;CURSOF
+FC78 : F783   ;EXIT
+FC7A : FB8B   ;SS2CH
+FC7C : F783   ;EXIT
+FC7E : F845   ;CANCEL
+FC80 : F783   ;EXIT
+FC82 : F783   ;EXIT
+FC84 : FB8D   ;ESCCH
+FC86 : F783   ;EXIT
+FC88 : F783   ;EXIT
+FC8A : F8D7   ;RECSEP
+FC8C : FB8C   ;USCH
+
+=== Paramètres de simple et double hauteur
+==========================================
+
+;SSIZE
+FC8E : 01
+FC8F : 0119
+FC91 : FEE8
+FC93 : 0118
+FC95 : 00
+;DSIZE
+FC96 : 02
+FC97 : 0259
+FC99 : FDA8
+FC9B : 0258
+FC9D : 01
+
+
+    ~~~~~~~~~~~~~~~~~~~~~~~~~
+    ~~~~ SECTION "TABAF" ~~~~
+    ~~~~~~~~~~~~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    ~~~ Générateur de caractères (G0 + G2 : France) ~~~
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+=== Alphabet G0
+===============
+
+GLOBAL TABAF
+;TABAF
+FC9E : 00 00 00 00 00 00 00 00   ; Espace
+FCA6 : 00 10 00 10 10 10 10 00   ; '!'
+FCAE : 00 00 00 00 50 28 14 00   ; '"'
+FCB6 : 28 28 FE 28 FE 28 28 00   ; '#'
+FCBE : 10 FC 12 7C 90 7C 10 00   ; '$'
+FCC6 : 00 46 26 10 08 64 62 00   ; '%'
+FCCE : 00 3A 4C 4A 30 48 30 00   ; '&'
+FCD6 : 00 00 00 00 18 0C 0C 00   ; '\'' (apostrophe)
+FCDE : 00 08 10 10 10 10 08 00   ; '('
+FCE6 : 00 10 08 08 08 08 10 00   ; ')'
+FCEE : 00 54 38 6C 38 54 00 00   ; '*'
+FCF6 : 00 10 10 7C 10 10 00 00   ; '+'
+FCFE : 00 10 0C 0C 00 00 00 00   ; ','
+FD06 : 00 00 00 7C 00 00 00 00   ; '-'
+FD0E : 00 18 18 00 00 00 00 00   ; '.'
+FD16 : 80 40 20 10 08 04 02 01   ; '/'
+FD1E : 00 3C 62 52 4A 46 3C 00   ; '0'
+FD26 : 00 3C 08 08 28 18 08 00   ; '1'
+FD2E : 00 7E 40 3C 02 42 3C 00   ; '2'
+FD36 : 00 3C 42 02 1C 42 3C 00   ; '3'
+FD3E : 00 04 7E 24 14 0C 04 00   ; '4'
+FD46 : 00 3C 42 02 7C 40 7E 00   ; '5'
+FD4E : 00 3C 42 42 7C 20 1C 00   ; '6'
+FD56 : 00 40 20 10 08 04 7E 00   ; '7'
+FD5E : 00 3C 42 42 3C 42 3C 00   ; '8'
+FD66 : 00 38 04 3E 42 42 3C 00   ; '9'
+FD6E : 00 18 18 00 18 18 00 00   ; ':'
+FD76 : 10 0C 00 0C 0C 00 00 00   ; ';'
+FD7E : 00 08 10 20 20 10 08 00   ; '<'
+FD86 : 00 00 7E 00 7E 00 00 00   ; '='
+FD8E : 00 10 08 04 04 08 10 00   ; '>'
+FD96 : 00 08 00 08 04 22 1C 00   ; '?'
+FD9E : 00 3E 5C 52 5E 42 3C 00   ; '@'
+FDA6 : 00 42 42 7E 42 24 18 00   ; 'A'
+FDAE : 00 7E 22 22 3C 22 7C 00   ; 'B'
+FDB6 : 00 3C 42 40 40 42 3C 00   ; 'C'
+FDBE : 00 7C 22 22 22 22 7C 00   ; 'D'
+FDC6 : 00 7E 40 40 78 40 7E 00   ; 'E'
+FDCE : 00 40 40 40 78 40 7E 00   ; 'F'
+FDD6 : 00 3C 42 4E 40 42 3C 00   ; 'G'
+FDDE : 00 42 42 42 7E 42 42 00   ; 'H'
+FDE6 : 00 38 10 10 10 10 38 00   ; 'I'
+FDEE : 00 3C 42 02 02 02 02 00   ; 'J'
+FDF6 : 00 44 48 50 70 48 44 00   ; 'K'
+FDFE : 00 7E 40 40 40 40 40 00   ; 'L'
+FE06 : 00 42 42 42 5A 66 42 00   ; 'M'
+FE0E : 00 42 46 4A 52 62 42 00   ; 'N'
+FE16 : 00 3C 42 42 42 42 3C 00   ; 'O'
+FE1E : 00 40 40 7C 42 42 7C 00   ; 'P'
+FE26 : 00 3A 44 4A 42 42 3C 00   ; 'Q'
+FE2E : 00 42 44 7C 42 42 7C 00   ; 'R'
+FE36 : 00 3C 42 02 3C 40 3C 00   ; 'S'
+FE3E : 00 10 10 10 10 10 7C 00   ; 'T'
+FE46 : 00 3C 42 42 42 42 42 00   ; 'U'
+FE4E : 00 18 24 24 42 42 42 00   ; 'V'
+FE56 : 00 42 66 5A 42 42 42 00   ; 'W'
+FE5E : 00 42 24 18 18 24 42 00   ; 'X'
+FE66 : 00 10 10 10 10 28 44 00   ; 'Y'
+FE6E : 00 7E 20 10 08 04 7E 00   ; 'Z'
+FE76 : 00 38 20 20 20 20 38 00   ; '['
+FE7E : 01 02 04 08 10 20 40 80   ; '\'
+FE86 : 00 1C 04 04 04 04 1C 00   ; ']'
+FE8E : 00 10 10 10 7C 38 10 00   ; '↑' exposant
+FE96 : FF 00 00 00 00 00 00 00   ; '_' caractère souligné
+FE9E : 00 00 00 00 FF 00 00 00   ; '—' tiret cadratin
+
+=== Minuscules
+==============
+
+;TABMIN
+FEA6 : 00 3A 44 38 04 38 00 00   ; 'a'
+FEAE : 00 5C 62 42 62 5C 40 00   ; 'b'
+FEB6 : 00 3C 42 40 42 3C 00 00   ; 'c'
+FEBE : 00 3A 46 42 46 3A 02 00   ; 'd'
+FEC6 : 00 3C 40 7E 42 3C 00 00   ; 'e'
+FECE : 00 10 10 7C 10 12 0C 00   ; 'f'
+FED6 : 3C 02 3A 46 46 3C 00 00   ; 'g'
+FEDE : 00 42 42 42 62 5C 40 00   ; 'h'
+FEE6 : 00 1C 08 08 08 18 00 08   ; 'i'
+FEEE : 38 44 04 04 04 04 00 04   ; 'j'
+FEF6 : 00 22 34 28 24 22 20 00   ; 'k'
+FEFE : 00 1C 08 08 08 08 18 00   ; 'l'
+FF06 : 00 92 92 92 DA A4 00 00   ; 'm'
+FF0E : 00 22 22 22 32 4C 00 00   ; 'n'
+FF16 : 00 3C 42 42 42 3C 00 00   ; 'o'
+FF1E : 40 5C 62 42 62 5C 00 00   ; 'p'
+FF26 : 02 3A 46 46 46 3A 00 00   ; 'q'
+FF2E : 00 40 40 40 62 5C 00 00   ; 'r'
+FF36 : 00 7C 02 3C 40 3C 00 00   ; 's'
+FF3E : 00 0C 12 10 10 38 10 00   ; 't'
+FF46 : 00 3A 46 42 42 42 00 00   ; 'u'
+FF4E : 00 18 24 42 42 42 00 00   ; 'v'
+FF56 : 00 24 5A 42 42 42 00 00   ; 'w'
+FF5E : 00 42 24 18 24 42 00 00   ; 'x'
+FF66 : 3C 42 1A 66 42 42 00 00   ; 'y'
+FF6E : 00 7E 20 18 04 7E 00 00   ; 'z'
+
+;ENDMIN
+FF76 : 0C 08 08 10 08 08 0C 00   ; '{'
+FF7E : 10 10 10 10 10 10 10 10   ; '|'
+FF86 : 30 10 10 08 10 10 30 00   ; '}'
+FF8E : 00 00 00 00 00 00 00 FF   ; '‾' Espace surligné
+FF96 : FF FF FF FF FF FF FF FF   ; Delete
+
+=== alphabet G2
+===============
+
+FF9E : 18 3C 42 40 42 3C 00 00   ; 'ç' cédille
+;ACENTS
+FFA6 : 00 00 00 00 00 00 18 30   ; '`' Accent grave
+FFAE : 00 00 00 00 00 00 18 0C   ; '´' Accent aigü
+FFB6 : 00 00 00 00 00 00 24 18   ; '^' Accent circonflexe
+;ACENTF
+FFBE : 00 00 00 00 00 00 00 66   ; '¨' Tréma
+
+
+=== DIVERS
+==========
+
+GLOBAL PAGE
+;PAGE
+FFC6 : 1B
+FFC7 : 60
+FFC8 : 70
+FFC9 : 0C
+FFCA : 14
+FFCB : 1F
+FFCC : 4C
+FFCD : 54
+FFCE : 1B
+FFCF : 73
+FFD0 : 7C
+FFD1 : 1B
+FFD2 : 70
+FFD3 : 00
+
+GLOBAL TABCLS
+;TABCLS
+FFD4 : 1B
+FFD5 : 66
+FFD6 : 46
+FFD7 : 0C
+
+
+    ~~~~~~~~~~~~
+    ~~~~ ?? ~~~~
+    ~~~~~~~~~~~~
+
+=== ??? inconnu
+===============
+
+FFD8 : 35
+FFD9 : 40
+FFDA : DF
+FFDB : 82
+FFDC : A6
+FFDD : C4
+FFDE : 97
+FFDF : 80
+FFE0 : 39
+FFE1 : BD
+FFE2 : CB
+FFE3 : ED
+FFE4 : 8D
+FFE5 : 03
+FFE6 : BD
+FFE7 : CB
+FFE8 : 83
+FFE9 : 7E
+FFEA : CB
+FFEB : F9
+FFEC : EC
+FFED : ED
+FFEE : EE
+FFEF : A7
+
+
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    ~~~~ SECTION "INTERRUPT" ~~~~
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+=== Vecteurs d'interruption du 6809
+===================================
+
+FFF0 : 0000   (Réservé)
+FFF2 : F0AD   Vecteur SWI3    (=> ;RTIPNT) instruction RTI en ROM
+FFF4 : F0AD   Vecteur SWI2    (=> ;RTIPNT) instruction RTI en ROM
+FFF6 : F642   Vecteur FIRQ    (=> ;FIRQSB)
+FFF8 : F657   Vecteur IRQ     (=> ;IRQSUB) traitement 50 Hz
+FFFA : F63E   Vecteur SWI     (=> ;SWI1SB) appels au moniteur
+FFFC : F0AD   Vecteur NMI     (=> ;RTIPNT) instruction RTI en ROM
+FFFE : F003   Vecteur RESET   (=> ;DEPART) point d'entrée RESET 
+

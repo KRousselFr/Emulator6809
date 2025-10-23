@@ -1113,15 +1113,8 @@ namespace Emulator6809
         {
             // opération logique sur le registre d'état
             this.RegisterCC &= val;
-            this.flagE = true;
-            PushWord(this.regPC);
-            PushWord(this.regU);
-            PushWord(this.regY);
-            PushWord(this.regX);
-            PushByte(this.regDP);
-            PushByte(this.regB);
-            PushByte(this.regA);
-            PushByte(this.RegisterCC);
+            // sauve tous les registres du processeur sur la pile
+            PushRegsForInterrupt(false);
             // cycles supplémentaires
             this.cycles += 6;
             // le processeur se met en attente d'une interruption
@@ -3930,5 +3923,4 @@ namespace Emulator6809
 
     }
 }
-
 

@@ -302,9 +302,13 @@ namespace Emulator6809
             }
             /* si on arrive ici, l'octet décrivant
                le mode indexé est invalide */
-            throw new UnknownOpcodeException(this.regPC - 1, postByte,
-                    String.Format(ERR_BAD_INDEX_POSTBYTE,
-                                  this.regPC - 1, postByte));
+            if (this.uoPolicy == UnknownOpcodePolicy.ThrowException) {
+                throw new UnknownOpcodeException(this.regPC - 1, postByte,
+                        String.Format(ERR_BAD_INDEX_POSTBYTE,
+                                      this.regPC - 1, postByte));
+            } else {
+                return "*** ?!?";
+            }
         }
 
         /* paire de registres, pour les instructions EXG et TFR */
@@ -312,11 +316,11 @@ namespace Emulator6809
         {
             byte postByte = ReadMem(this.regPC);
             this.regPC++;
-            byte niblDest = (byte)((postByte & 0xf0) >> 4);
-            string dest = __nibble2Reg(niblDest);
-            byte niblSrc = (byte)(postByte & 0x0f);
+            byte niblSrc = (byte)((postByte & 0xf0) >> 4);
             string src = __nibble2Reg(niblSrc);
-            return String.Format("{0}, {1}", niblSrc, niblDest);
+            byte niblDest = (byte)(postByte & 0x0f);
+            string dest = __nibble2Reg(niblDest);
+            return String.Format("{0}, {1}", src, dest);
         }
         private string __nibble2Reg(byte nibble)
         {
@@ -344,8 +348,12 @@ namespace Emulator6809
                     return "DP";
 
                 default:
-                    throw new ArgumentException(String.Format(
+                    if (this.uoPolicy == UnknownOpcodePolicy.ThrowException) {
+                        throw new ArgumentException(String.Format(
                             ERR_BAD_REGISTER_CODE, nibble));
+                    } else {
+                        return "*** ?!?";
+                    }
             }
         }
 
@@ -366,7 +374,7 @@ namespace Emulator6809
                 else sb.Append("U/");
             }
             if ((postByte & 0x80) != 0) sb.Append("PC/");
-            sb.Remove(sb.Length - 1, 1);
+            if (sb.Length > 0) sb.Remove(sb.Length - 1, 1);
             return sb.ToString();
         }
 
@@ -1396,7 +1404,7 @@ namespace Emulator6809
 
                 case 0xce:
                     mnemo = "LDS";
-                    args = AddrModeImmediate();
+                    args = AddrModeImmediate16bit();
                     break;
 
                 case 0xde:

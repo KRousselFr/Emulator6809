@@ -1,0 +1,136 @@
+﻿<Window x:Class="GuiEmu6809.BreakpointWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:core="clr-namespace:System;assembly=mscorlib"
+        xmlns:local="clr-namespace:GuiEmu6809"
+        mc:Ignorable="d"
+        FontFamily="Arial"
+        FontSize="16"
+        Background="LightGray"
+        ResizeMode="NoResize"
+        Title="Liste des points d'arrêt"
+        Width="640" Height="480"
+        Loaded="Window_Loaded">
+
+    <Window.Resources>
+        <!-- Styles de composants -->
+        <Style x:Key="BTNLigne" TargetType="Button">
+            <Setter Property="Background" Value="White" />
+            <Setter Property="Margin" Value="5,10" />
+            <Setter Property="Padding" Value="5" />
+        </Style>
+        <Style x:Key="BTNFenetre" TargetType="Button">
+            <Setter Property="Background" Value="White" />
+            <Setter Property="Margin" Value="10,5" />
+            <Setter Property="Padding" Value="5" />
+            <Setter Property="Width" Value="120" />
+        </Style>
+        <Style x:Key="TBRegister" TargetType="TextBox">
+            <Setter Property="Margin" Value="5" />
+            <Setter Property="HorizontalAlignment" Value="Left" />
+            <Setter Property="TextAlignment" Value="Center" />
+            <Setter Property="FontFamily" Value="Consolas" />
+            <Setter Property="FontSize" Value="16" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Background" Value="White" />
+        </Style>
+        <Style x:Key="TBByteValue" TargetType="TextBox"
+               BasedOn="{StaticResource TBRegister}">
+            <Setter Property="MaxLength" Value="2" />
+            <Setter Property="Width" Value="24" />
+        </Style>
+        <Style x:Key="TBAddress" TargetType="TextBox"
+               BasedOn="{StaticResource TBRegister}">
+            <Setter Property="MaxLength" Value="4" />
+            <Setter Property="Width" Value="44" />
+        </Style>
+        <!-- Valeurs d'énumérations -->
+        <ObjectDataProvider x:Key="TrapKinds"
+                            MethodName="GetValues"
+                            ObjectType="{x:Type core:Enum}">
+            <ObjectDataProvider.MethodParameters>
+                <x:Type Type="local:DebuggerTrapKind6809" />
+            </ObjectDataProvider.MethodParameters>
+        </ObjectDataProvider>
+    </Window.Resources>
+
+    <DockPanel>
+        <!-- Boutons (en bas de la fenêtre) -->
+        <StackPanel DockPanel.Dock="Bottom"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Margin="5,10">
+            <Button Name="btnClose"
+                    Style="{StaticResource BTNFenetre}"
+                    IsCancel="True"
+                    Click="BtnClose_Click">
+                _Fermer
+            </Button>
+            <Button Name="btnOK"
+                    Style="{StaticResource BTNFenetre}"
+                    IsDefault="True"
+                    Click="BtnOK_Click">
+                OK
+            </Button>
+        </StackPanel>
+
+        <DockPanel>
+            <!-- Boutons de gestion du contenu à droite -->
+            <StackPanel DockPanel.Dock="Right"
+                        Orientation="Vertical"
+                        VerticalAlignment="Stretch"
+                        Margin="5">
+                <Button Name="btnCreateTrap"
+                        Style="{StaticResource BTNLigne}"
+                        Click="BtnCreateTrap_Click">
+                    Ajouter
+                </Button>
+                <Button Name="btnDeleteTrap"
+                        Style="{StaticResource BTNLigne}"
+                        Click="BtnDeleteTrap_Click">
+                    Supprimer
+                </Button>
+                <Separator Margin="5,15" />
+                <Button Name="btnLoadTraps"
+                        Style="{StaticResource BTNLigne}"
+                        Click="BtnLoadTraps_Click">
+                    Charger...
+                </Button>
+                <Button Name="btnSaveTraps"
+                        Style="{StaticResource BTNLigne}"
+                        Click="BtnSaveTraps_Click">
+                    Sauver...
+                </Button>
+            </StackPanel>
+            <!-- Grille centrale : détail des points d'arrêts -->
+            <DataGrid Name="dgTraps"
+                      AutoGenerateColumns="False">
+                <DataGrid.Columns>
+                    <DataGridCheckBoxColumn Header="Activé"
+                                            Width="50"
+                                            Binding="{Binding Enabled}" />
+                    <DataGridComboBoxColumn Header="Type"
+                                            Width="300"
+                                            ItemsSource="{Binding Source={StaticResource TrapKinds}}"
+                                            SelectedItemBinding="{Binding TrapKind}" />
+                    <DataGridTemplateColumn Header="Valeur (hexa)"
+                                            Width="150">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding HexValue}" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                        <DataGridTemplateColumn.CellEditingTemplate>
+                            <DataTemplate>
+                                <TextBox Text="{Binding HexValue}" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellEditingTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+        </DockPanel>
+
+    </DockPanel>
+</Window>

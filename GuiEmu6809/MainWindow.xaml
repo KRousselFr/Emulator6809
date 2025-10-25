@@ -1,0 +1,489 @@
+﻿<Window x:Class="GuiEmu6809.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:GuiEmu6809"
+        xmlns:commands="clr-namespace:GUIEmu6809.Commands"
+        mc:Ignorable="d"
+        Title="Emulator6809"
+        FontFamily="Arial"
+        FontSize="16"
+        Height="450" Width="800"
+        Loaded="Window_Loaded">
+
+    <Window.Resources>
+        <!-- Styles de composants -->
+        <Style x:Key="GBInterface" TargetType="GroupBox">
+            <Setter Property="Background" Value="LightGray" />
+            <Setter Property="BorderBrush" Value="Black" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Margin" Value="5" />
+            <Setter Property="Padding" Value="5" />
+        </Style>
+        <Style x:Key="TBDisasm" TargetType="TextBox">
+            <Setter Property="AcceptsReturn" Value="True" />
+            <Setter Property="FontFamily" Value="Consolas" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="ScrollViewer.CanContentScroll" Value="True" />
+            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility"
+                    Value="Auto" />
+            <Setter Property="ScrollViewer.VerticalScrollBarVisibility"
+                    Value="Visible" />
+            <Setter Property="TextWrapping" Value="NoWrap" />
+            <Setter Property="VerticalAlignment" Value="Stretch" />
+        </Style>
+        <Style x:Key="TBMemView" TargetType="TextBox">
+            <Setter Property="AcceptsReturn" Value="True" />
+            <Setter Property="FontFamily" Value="Consolas" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="IsReadOnly" Value="True" />
+            <Setter Property="ScrollViewer.CanContentScroll" Value="True" />
+            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility"
+                    Value="Visible" />
+            <Setter Property="ScrollViewer.VerticalScrollBarVisibility"
+                    Value="Visible" />
+            <Setter Property="TextWrapping" Value="NoWrap" />
+            <Setter Property="VerticalAlignment" Value="Stretch" />
+        </Style>
+        <Style x:Key="TBLabel" TargetType="TextBlock">
+            <Setter Property="Margin" Value="5" />
+            <Setter Property="HorizontalAlignment" Value="Left" />
+            <Setter Property="VerticalAlignment" Value="Bottom" />
+            <Setter Property="FontSize" Value="16" />
+            <Setter Property="FontWeight" Value="Bold" />
+        </Style>
+        <Style x:Key="TBRegister" TargetType="TextBox">
+            <Setter Property="Margin" Value="5" />
+            <Setter Property="HorizontalAlignment" Value="Left" />
+            <Setter Property="TextAlignment" Value="Center" />
+            <Setter Property="FontFamily" Value="Consolas" />
+            <Setter Property="FontSize" Value="16" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Background" Value="White" />
+        </Style>
+        <Style x:Key="TBByteValue" TargetType="TextBox"
+               BasedOn="{StaticResource TBRegister}">
+            <Setter Property="MaxLength" Value="2" />
+            <Setter Property="Width" Value="24" />
+        </Style>
+        <Style x:Key="TBAddress" TargetType="TextBox"
+               BasedOn="{StaticResource TBRegister}">
+            <Setter Property="MaxLength" Value="4" />
+            <Setter Property="Width" Value="44" />
+        </Style>
+        <Style x:Key="CBFlag" TargetType="CheckBox">
+            <Setter Property="Margin" Value="2" />
+            <Setter Property="FontFamily" Value="Consolas" />
+        </Style>
+    </Window.Resources>
+
+    <Window.CommandBindings>
+        <!-- Commandes du menu et de la barre d'outils -->
+        <CommandBinding Command="New"
+                        Executed="CommandNew_Executed" />
+        <CommandBinding Command="Open"
+                        Executed="CommandOpen_Executed" />
+        <CommandBinding Command="SaveAs"
+                        Executed="CommandSaveAs_Executed" />
+        <CommandBinding Command="Close"
+                        Executed="CommandClose_Executed" />
+        <CommandBinding Command="{x:Static commands:SpecificCommands.ResetCPUCommand}"
+                        CanExecute="CommandResetCPU_CanExecute"
+                        Executed="CommandResetCPU_Executed" />
+        <CommandBinding Command="{x:Static commands:SpecificCommands.StepCPUCommand}"
+                        CanExecute="CommandStepCPU_CanExecute"
+                        Executed="CommandStepCPU_Executed" />
+        <CommandBinding Command="{x:Static commands:SpecificCommands.RunCyclesCommand}"
+                        CanExecute="CommandRunCycles_CanExecute"
+                        Executed="CommandRunCycles_Executed" />
+        <CommandBinding Command="{x:Static commands:SpecificCommands.RunCPUCommand}"
+                        CanExecute="CommandRunCPU_CanExecute"
+                        Executed="CommandRunCPU_Executed" />
+        <CommandBinding Command="{x:Static commands:SpecificCommands.StopCPUCommand}"
+                        CanExecute="CommandStopCPU_CanExecute"
+                        Executed="CommandStopCPU_Executed" />
+        <CommandBinding Command="{x:Static commands:SpecificCommands.BreakpointsCommand}"
+                        Executed="CommandBkpts_Executed" />
+        <CommandBinding Command="{x:Static commands:SpecificCommands.TraceOnCommand}"
+                        CanExecute="CommandTraceOn_CanExecute"
+                        Executed="CommandTraceOn_Executed" />
+        <CommandBinding Command="{x:Static commands:SpecificCommands.TraceOffCommand}"
+                        CanExecute="CommandTraceOff_CanExecute"
+                        Executed="CommandTraceOff_Executed" />
+    </Window.CommandBindings>
+
+    <Window.InputBindings>
+        <!-- Raccourcis clavier -->
+        <KeyBinding Key="N" Modifiers="Ctrl" Command="New" />
+        <KeyBinding Key="O" Modifiers="Ctrl" Command="Open" />
+        <KeyBinding Key="S" Modifiers="Ctrl" Command="SaveAs" />
+        <KeyBinding Key="Q" Modifiers="Ctrl" Command="Close" />
+        <KeyBinding Key="R" Modifiers="Ctrl"
+                    Command="{x:Static commands:SpecificCommands.ResetCPUCommand}" />
+        <KeyBinding Key="F10"
+                    Command="{x:Static commands:SpecificCommands.StepCPUCommand}" />
+        <KeyBinding Key="F5" Modifiers="Ctrl"
+                    Command="{x:Static commands:SpecificCommands.RunCyclesCommand}" />
+        <KeyBinding Key="F5"
+                    Command="{x:Static commands:SpecificCommands.RunCPUCommand}" />
+        <KeyBinding Key="F5" Modifiers="Shift"
+                    Command="{x:Static commands:SpecificCommands.StopCPUCommand}" />
+        <KeyBinding Key="B" Modifiers="Ctrl"
+                    Command="{x:Static commands:SpecificCommands.BreakpointsCommand}" />
+        <KeyBinding Key="T" Modifiers="Ctrl"
+                    Command="{x:Static commands:SpecificCommands.TraceOnCommand}" />
+        <KeyBinding Key="T" Modifiers="Ctrl+Shift"
+                    Command="{x:Static commands:SpecificCommands.TraceOffCommand}" />
+    </Window.InputBindings>
+    
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="5" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="auto" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="auto" />
+            <RowDefinition Height="auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- Barre de menu -->
+        <Menu Grid.ColumnSpan="3"
+              Grid.Row="0">
+            <MenuItem Header="_Fichier">
+                <MenuItem Header="_Nouveau"
+                          Command="New" />
+                <Separator />
+                <MenuItem Header="_Ouvrir..."
+                          Command="Open" />
+                <MenuItem Header="_Sauvegarder..."
+                          Command="SaveAs" />
+                <Separator />
+                <MenuItem Header="_Quitter"
+                          Command="Close" />
+            </MenuItem>
+            <MenuItem Header="_Simulation">
+                <MenuItem Header="Réinit. processeur"
+                          Command="{x:Static commands:SpecificCommands.ResetCPUCommand}" />
+                <Separator />
+                <MenuItem Header="Exécuter _une instruction"
+                          Command="{x:Static commands:SpecificCommands.StepCPUCommand}" />
+                <MenuItem Header="Exécuter n cycles..."
+                          Command="{x:Static commands:SpecificCommands.RunCyclesCommand}" />
+                <MenuItem Header="E_xécuter"
+                          Command="{x:Static commands:SpecificCommands.RunCPUCommand}" />
+                <MenuItem Header="A_rrêter"
+                          Command="{x:Static commands:SpecificCommands.StopCPUCommand}" />
+                <Separator />
+                <MenuItem Header="_Points d'arrêt..."
+                          Command="{x:Static commands:SpecificCommands.BreakpointsCommand}" />
+                <Separator />
+                <MenuItem Header="Activer la _trace..."
+                          Command="{x:Static commands:SpecificCommands.TraceOnCommand}" />
+                <MenuItem Header="Désactiver la _trace"
+                          Command="{x:Static commands:SpecificCommands.TraceOffCommand}" />
+            </MenuItem>
+        </Menu>
+
+        <!-- Désassemblage du code binaire -->
+        <GroupBox Grid.Column="0"
+                  Grid.Row="1" Grid.RowSpan="2"
+                  Name="groupDisasm"
+                  Header="Désassemblage"
+                  Style="{StaticResource GBInterface}"
+                  VerticalAlignment="Stretch">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Top"
+                            Orientation="Horizontal">
+                    <TextBlock VerticalAlignment="Center"
+                               Text="Depuis :" />
+                    <TextBox Name="tbDisasmFrom"
+                             Style="{StaticResource TBAddress}"
+                             TextChanged="TbDisasmLimits_TextChanged"
+                             Text="0000" />
+                    <TextBlock VerticalAlignment="Center"
+                               Text=" jusqu'à :" />
+                    <TextBox Name="tbDisasmTo"
+                             Style="{StaticResource TBRegister}"
+                             TextChanged="TbDisasmLimits_TextChanged"
+                             Text="FFFF" />
+                </StackPanel>
+                <TextBox Name="tbDisasmView"
+                         Style="{StaticResource TBDisasm}">
+                    0000 : 12        NOP
+                </TextBox>
+            </DockPanel>
+        </GroupBox>
+
+        <!-- séparateur coulissant -->
+        <GridSplitter Grid.Column="1"
+                      Grid.Row="1" Grid.RowSpan="2"
+                      Width="5"
+                      HorizontalAlignment="Stretch" />
+
+        <!-- Mémoire connectée au processeur -->
+        <GroupBox Grid.Column="2"
+                  Grid.Row="1" Grid.RowSpan="2"
+                  Name="groupMemory"
+                  Header="Contenu mémoire"
+                  Style="{StaticResource GBInterface}"
+                  VerticalAlignment="Stretch">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Top"
+                            Orientation="Horizontal">
+                    <TextBlock VerticalAlignment="Center"
+                               Text="Depuis :" />
+                    <TextBox Name="tbMemoryFrom"
+                             Style="{StaticResource TBAddress}"
+                             TextChanged="TbMemoryLimits_TextChanged"
+                             Text="0000" />
+                    <TextBlock VerticalAlignment="Center"
+                               Text=" jusqu'à :" />
+                    <TextBox Name="tbMemoryTo"
+                             Style="{StaticResource TBRegister}"
+                             TextChanged="TbMemoryLimits_TextChanged"
+                             Text="FFFF" />
+                </StackPanel>
+                <TextBox Name="tbMemoryView"
+                         Style="{StaticResource TBMemView}">
+                    0000 : 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+                </TextBox>
+            </DockPanel>
+        </GroupBox>
+
+        <!-- Registres du processeur -->
+        <GroupBox Grid.Column="3"
+                  Grid.Row="1"
+                  Name="groupRegisters"
+                  Header="Registres"
+                  Style="{StaticResource GBInterface}"
+                  Height="auto"
+                  Width="184"
+                  VerticalAlignment="Top">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="auto" />
+                    <RowDefinition Height="auto" />
+                    <RowDefinition Height="auto" />
+                    <RowDefinition Height="auto" />
+                    <RowDefinition Height="auto" />
+                    <RowDefinition Height="auto" />
+                    <RowDefinition Height="auto" />
+                    <RowDefinition Height="auto" />
+                    <RowDefinition Height="auto" />
+                    <RowDefinition Height="auto" />
+                    <RowDefinition Height="auto" />
+                    <RowDefinition Height="auto" />
+                    <RowDefinition Height="auto" />
+                    <RowDefinition Height="auto" />
+                </Grid.RowDefinitions>
+                <TextBlock Grid.Column="0"
+                           Grid.Row="0"
+                           Style="{StaticResource TBLabel}"
+                           Text="A" />
+                <TextBox Grid.Column="1"
+                         Grid.Row="0"
+                         Name="tbRegA"
+                         Style="{StaticResource TBByteValue}"
+                         TextChanged="TbRegA_TextChanged"
+                         Text="00" />
+                <TextBlock Grid.Column="0"
+                           Grid.Row="1"
+                           Style="{StaticResource TBLabel}"
+                           Text="B" />
+                <TextBox Grid.Column="1"
+                         Grid.Row="1"
+                         Name="tbRegB"
+                         Style="{StaticResource TBByteValue}"
+                         TextChanged="TbRegB_TextChanged"
+                         Text="00" />
+                <TextBlock Grid.Column="0"
+                           Grid.Row="2"
+                           Style="{StaticResource TBLabel}"
+                           Text="X" />
+                <TextBox Grid.Column="1"
+                         Grid.Row="2"
+                         Name="tbRegX"
+                         Style="{StaticResource TBAddress}"
+                         TextChanged="TbRegX_TextChanged"
+                         Text="0000" />
+                <TextBlock Grid.Column="0"
+                           Grid.Row="3"
+                           Style="{StaticResource TBLabel}"
+                           Text="Y" />
+                <TextBox Grid.Column="1"
+                         Grid.Row="3"
+                         Name="tbRegY"
+                         Style="{StaticResource TBAddress}"
+                         TextChanged="TbRegY_TextChanged"
+                         Text="0000" />
+                <TextBlock Grid.Column="0"
+                           Grid.Row="4"
+                           Style="{StaticResource TBLabel}"
+                           Text="U" />
+                <TextBox Grid.Column="1"
+                         Grid.Row="4"
+                         Name="tbRegU"
+                         Style="{StaticResource TBAddress}"
+                         TextChanged="TbRegU_TextChanged"
+                         Text="0000" />
+                <TextBlock Grid.Column="0"
+                           Grid.Row="5"
+                           Style="{StaticResource TBLabel}"
+                           Text="S" />
+                <TextBox Grid.Column="1"
+                         Grid.Row="5"
+                         Name="tbRegS"
+                         Style="{StaticResource TBAddress}"
+                         TextChanged="TbRegS_TextChanged"
+                         Text="0000" />
+                <TextBlock Grid.Column="0"
+                           Grid.Row="6"
+                           Style="{StaticResource TBLabel}"
+                           Text="DP" />
+                <TextBox Grid.Column="1"
+                         Grid.Row="6"
+                         Name="tbRegDP"
+                         Style="{StaticResource TBByteValue}"
+                         TextChanged="TbRegDP_TextChanged"
+                         Text="00" />
+                <TextBlock Grid.Column="0"
+                           Grid.Row="7"
+                           Style="{StaticResource TBLabel}"
+                           Text="PC" />
+                <TextBox Grid.Column="1"
+                         Grid.Row="7"
+                         Name="tbRegPC"
+                         Style="{StaticResource TBAddress}"
+                         TextChanged="TbRegPC_TextChanged"
+                         Text="0000" />
+                <TextBlock Grid.Column="0" Grid.ColumnSpan="2"
+                           Grid.Row="8"
+                           Name="txtNextInstr"
+                           FontFamily="Consolas"
+                           FontSize="15"
+                           HorizontalAlignment="Right"
+                           Text="NOP" />
+                <TextBlock Grid.Column="0"
+                           Grid.Row="9"
+                           Style="{StaticResource TBLabel}"
+                           Text="CC" />
+                <TextBox Grid.Column="1"
+                         Grid.Row="9"
+                         Name="tbRegCC"
+                         Style="{StaticResource TBByteValue}"
+                         IsReadOnly="True"
+                         Background="LightGray"
+                         Text="10" />
+                <Grid Grid.Row="10"
+                      Grid.Column="0" Grid.ColumnSpan="2">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="auto" />
+                        <RowDefinition Height="auto" />
+                    </Grid.RowDefinitions>
+                    <CheckBox Grid.Column="0"
+                              Grid.Row="0"
+                              Name="cbFlagE"
+                              Style="{StaticResource CBFlag}"
+                              Checked="CbFlagE_Checked">
+                        E
+                    </CheckBox>
+                    <CheckBox Grid.Column="1"
+                              Grid.Row="0"
+                              Name="cbFlagF"
+                              Style="{StaticResource CBFlag}"
+                              Checked="CbFlagF_Checked">
+                        F
+                    </CheckBox>
+                    <CheckBox Grid.Column="2"
+                              Grid.Row="0"
+                              Name="cbFlagH"
+                              Style="{StaticResource CBFlag}"
+                              Checked="CbFlagH_Checked">
+                        H
+                    </CheckBox>
+                    <CheckBox Grid.Column="3"
+                              Grid.Row="0"
+                              Name="cbFlagI"
+                              Style="{StaticResource CBFlag}"
+                              Checked="CbFlagI_Checked">
+                        I
+                    </CheckBox>
+                    <CheckBox Grid.Column="0"
+                              Grid.Row="1"
+                              Name="cbFlagN"
+                              Style="{StaticResource CBFlag}"
+                              Checked="CbFlagN_Checked">
+                        N
+                    </CheckBox>
+                    <CheckBox Grid.Column="1"
+                              Grid.Row="1"
+                              Name="cbFlagZ"
+                              Style="{StaticResource CBFlag}"
+                              Checked="CbFlagZ_Checked">
+                        Z
+                    </CheckBox>
+                    <CheckBox Grid.Column="2"
+                              Grid.Row="1"
+                              Name="cbFlagV"
+                              Style="{StaticResource CBFlag}"
+                              Checked="CbFlagV_Checked">
+                        V
+                    </CheckBox>
+                    <CheckBox Grid.Column="3"
+                              Grid.Row="1"
+                              Name="cbFlagC"
+                              Style="{StaticResource CBFlag}"
+                              Checked="CbFlagC_Checked">
+                        C
+                    </CheckBox>
+                </Grid>
+                <TextBlock Grid.Column="0" Grid.ColumnSpan="2"
+                           Grid.Row="11"
+                           Style="{StaticResource TBLabel}"
+                           Margin="5,15,5,0"
+                           VerticalAlignment="Bottom"
+                           Text="Cycles :" />
+                <TextBox Grid.Column="0" Grid.ColumnSpan="2"
+                         Grid.Row="12"
+                         Name="tbCycles"
+                         IsReadOnly="True"
+                         HorizontalAlignment="Stretch"
+                         HorizontalContentAlignment="Right"
+                         Background="LightGray"
+                         Text="0"/>
+            </Grid>
+        </GroupBox>
+
+        <!-- Contenu de la pile -->
+        <GroupBox Grid.Column="3"
+                  Grid.Row="2"
+                  Name="groupStack"
+                  Header="Pile"
+                  Style="{StaticResource GBInterface}"
+                  VerticalAlignment="Stretch">
+            <TextBox Name="tbStackView"
+                     Style="{StaticResource TBMemView}"
+                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                     IsReadOnly="True">
+                0000 : 00
+            </TextBox>
+        </GroupBox>
+
+    </Grid>
+</Window>
+

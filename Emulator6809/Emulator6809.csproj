@@ -45,7 +45,9 @@
     <Compile Include="CPU6809.cs" />
     <Compile Include="Disasm6809.cs" />
     <Compile Include="IMemorySpace6809.cs" />
+    <Compile Include="MemoryFormatter_8bit.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="StackFormatter6809.cs" />
     <Compile Include="UnknownOpcodeException.cs" />
     <Compile Include="UnknownOpcodePolicy.cs" />
   </ItemGroup>

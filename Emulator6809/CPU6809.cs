@@ -519,9 +519,9 @@ namespace Emulator6809
                 PushWord(this.regU);
                 PushWord(this.regY);
                 PushWord(this.regX);
-                PushWord(this.regDP);
-                PushWord(this.regB);
-                PushWord(this.regA);
+                PushByte(this.regDP);
+                PushByte(this.regB);
+                PushByte(this.regA);
             }
             PushByte(this.RegisterCC);
         }
@@ -894,7 +894,9 @@ namespace Emulator6809
 
         private void InstrBGT(ushort addr)
         {
-            if (!(this.flagZ && (this.flagN ^ this.flagV))) this.regPC = addr;
+            if ( (!(this.flagZ || this.flagN || this.flagV)) ||
+                 (!(this.flagZ) && this.flagN && this.flagV) )
+                this.regPC = addr;
             // cycle supplémentaire
             this.cycles++;
         }
@@ -926,14 +928,18 @@ namespace Emulator6809
 
         private void InstrBLE(ushort addr)
         {
-            if (this.flagZ || (this.flagN ^ this.flagV)) this.regPC = addr;
+            if ( (this.flagN && !(this.flagZ) && !(this.flagV)) ||
+                 (!(this.flagN) && this.flagZ && !(this.flagV)) ||
+                 (!(this.flagN) && !(this.flagZ) && this.flagV) ||
+                 (this.flagN && this.flagZ && this.flagV) )
+                this.regPC = addr;
             // cycle supplémentaire
             this.cycles++;
         }
 
         private void InstrBLS(ushort addr)
         {
-            if (this.flagC || this.flagZ) this.regPC = addr;
+            if (this.flagC ^ this.flagZ) this.regPC = addr;
             // cycle supplémentaire
             this.cycles++;
         }
@@ -1503,7 +1509,9 @@ namespace Emulator6809
 
         private void InstrLBGT(ushort addr)
         {
-            if (!(this.flagZ && (this.flagN ^ this.flagV))) {
+            if ( (!(this.flagZ || this.flagN || this.flagV)) ||
+                 (!(this.flagZ) && this.flagN && this.flagV) )
+            {
                 this.regPC = addr;
                 // cycle supplémentaire si branchement
                 this.cycles++;
@@ -1525,7 +1533,11 @@ namespace Emulator6809
 
         private void InstrLBLE(ushort addr)
         {
-            if (this.flagZ || (this.flagN ^ this.flagV)) {
+            if ( (this.flagN && !(this.flagZ) && !(this.flagV)) ||
+                 (!(this.flagN) && this.flagZ && !(this.flagV)) ||
+                 (!(this.flagN) && !(this.flagZ) && this.flagV) ||
+                 (this.flagN && this.flagZ && this.flagV) )
+            {
                 this.regPC = addr;
                 // cycle supplémentaire si branchement
                 this.cycles++;
@@ -1536,7 +1548,7 @@ namespace Emulator6809
 
         private void InstrLBLS(ushort addr)
         {
-            if (this.flagC || this.flagZ) {
+            if (this.flagC ^ this.flagZ) {
                 this.regPC = addr;
                 // cycle supplémentaire si branchement
                 this.cycles++;

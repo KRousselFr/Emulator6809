@@ -24,6 +24,15 @@ namespace GuiEmu6809
         private const string TRAP_KIND_A_EQUALS = "A_EQUAL";
         private const string TRAP_KIND_A_LESS_THAN = "A_LESS_";
         private const string TRAP_KIND_A_MORE_THAN = "A_MORE_";
+        private const string TRAP_KIND_B_EQUALS = "B_EQUAL";
+        private const string TRAP_KIND_B_LESS_THAN = "B_LESS_";
+        private const string TRAP_KIND_B_MORE_THAN = "B_MORE_";
+        private const string TRAP_KIND_S_EQUALS = "S_EQUAL";
+        private const string TRAP_KIND_S_LESS_THAN = "S_LESS_";
+        private const string TRAP_KIND_S_MORE_THAN = "S_MORE_";
+        private const string TRAP_KIND_U_EQUALS = "U_EQUAL";
+        private const string TRAP_KIND_U_LESS_THAN = "U_LESS_";
+        private const string TRAP_KIND_U_MORE_THAN = "U_MORE_";
         private const string TRAP_KIND_X_EQUALS = "X_EQUAL";
         private const string TRAP_KIND_X_LESS_THAN = "X_LESS_";
         private const string TRAP_KIND_X_MORE_THAN = "X_MORE_";
@@ -71,6 +80,24 @@ namespace GuiEmu6809
                     return TRAP_KIND_A_LESS_THAN;
                 case DebuggerTrapKind6809.AmoreThan:
                     return TRAP_KIND_A_MORE_THAN;
+                case DebuggerTrapKind6809.Bequals:
+                    return TRAP_KIND_B_EQUALS;
+                case DebuggerTrapKind6809.BlessThan:
+                    return TRAP_KIND_B_LESS_THAN;
+                case DebuggerTrapKind6809.BmoreThan:
+                    return TRAP_KIND_B_MORE_THAN;
+                case DebuggerTrapKind6809.Sequals:
+                    return TRAP_KIND_S_EQUALS;
+                case DebuggerTrapKind6809.SlessThan:
+                    return TRAP_KIND_S_LESS_THAN;
+                case DebuggerTrapKind6809.SmoreThan:
+                    return TRAP_KIND_S_MORE_THAN;
+                case DebuggerTrapKind6809.Uequals:
+                    return TRAP_KIND_U_EQUALS;
+                case DebuggerTrapKind6809.UlessThan:
+                    return TRAP_KIND_U_LESS_THAN;
+                case DebuggerTrapKind6809.UmoreThan:
+                    return TRAP_KIND_U_MORE_THAN;
                 case DebuggerTrapKind6809.Xequals:
                     return TRAP_KIND_X_EQUALS;
                 case DebuggerTrapKind6809.XlessThan:
@@ -113,6 +140,24 @@ namespace GuiEmu6809
                     return DebuggerTrapKind6809.AlessThan;
                 case TRAP_KIND_A_MORE_THAN:
                     return DebuggerTrapKind6809.AmoreThan;
+                case TRAP_KIND_B_EQUALS:
+                    return DebuggerTrapKind6809.Bequals;
+                case TRAP_KIND_B_LESS_THAN:
+                    return DebuggerTrapKind6809.BlessThan;
+                case TRAP_KIND_B_MORE_THAN:
+                    return DebuggerTrapKind6809.BmoreThan;
+                case TRAP_KIND_S_EQUALS:
+                    return DebuggerTrapKind6809.Sequals;
+                case TRAP_KIND_S_LESS_THAN:
+                    return DebuggerTrapKind6809.SlessThan;
+                case TRAP_KIND_S_MORE_THAN:
+                    return DebuggerTrapKind6809.SmoreThan;
+                case TRAP_KIND_U_EQUALS:
+                    return DebuggerTrapKind6809.Uequals;
+                case TRAP_KIND_U_LESS_THAN:
+                    return DebuggerTrapKind6809.UlessThan;
+                case TRAP_KIND_U_MORE_THAN:
+                    return DebuggerTrapKind6809.UmoreThan;
                 case TRAP_KIND_X_EQUALS:
                     return DebuggerTrapKind6809.Xequals;
                 case TRAP_KIND_X_LESS_THAN:
@@ -159,21 +204,30 @@ namespace GuiEmu6809
             };
             switch (dt.kind) {
                 case DebuggerTrapKind6809.Breakpoint:
-                    if (st.Length < 14)
-                        throw new FormatException(String.Format(
-                                BAD_TRAP_STRING_FORMAT,
-                                st));
-                    dt.val = Convert.ToInt16(st.Substring(10, 4), 16);
-                    break;
-                case DebuggerTrapKind6809.Aequals:
-                case DebuggerTrapKind6809.AlessThan:
-                case DebuggerTrapKind6809.AmoreThan:
+                case DebuggerTrapKind6809.Sequals:
+                case DebuggerTrapKind6809.SlessThan:
+                case DebuggerTrapKind6809.SmoreThan:
+                case DebuggerTrapKind6809.Uequals:
+                case DebuggerTrapKind6809.UlessThan:
+                case DebuggerTrapKind6809.UmoreThan:
                 case DebuggerTrapKind6809.Xequals:
                 case DebuggerTrapKind6809.XlessThan:
                 case DebuggerTrapKind6809.XmoreThan:
                 case DebuggerTrapKind6809.Yequals:
                 case DebuggerTrapKind6809.YlessThan:
                 case DebuggerTrapKind6809.YmoreThan:
+                    if (st.Length < 14)
+                        throw new FormatException(String.Format(
+                                BAD_TRAP_STRING_FORMAT,
+                                st));
+                    dt.val = Convert.ToUInt16(st.Substring(10, 4), 16);
+                    break;
+                case DebuggerTrapKind6809.Aequals:
+                case DebuggerTrapKind6809.AlessThan:
+                case DebuggerTrapKind6809.AmoreThan:
+                case DebuggerTrapKind6809.Bequals:
+                case DebuggerTrapKind6809.BlessThan:
+                case DebuggerTrapKind6809.BmoreThan:
                     if (st.Length < 12)
                         throw new FormatException(String.Format(
                                 BAD_TRAP_STRING_FORMAT,
@@ -245,6 +299,12 @@ namespace GuiEmu6809
             get {
                 switch (this.kind) {
                     case DebuggerTrapKind6809.Breakpoint:
+                    case DebuggerTrapKind6809.Sequals:
+                    case DebuggerTrapKind6809.SlessThan:
+                    case DebuggerTrapKind6809.SmoreThan:
+                    case DebuggerTrapKind6809.Uequals:
+                    case DebuggerTrapKind6809.UlessThan:
+                    case DebuggerTrapKind6809.UmoreThan:
                     case DebuggerTrapKind6809.Xequals:
                     case DebuggerTrapKind6809.XlessThan:
                     case DebuggerTrapKind6809.XmoreThan:
@@ -255,6 +315,9 @@ namespace GuiEmu6809
                     case DebuggerTrapKind6809.Aequals:
                     case DebuggerTrapKind6809.AlessThan:
                     case DebuggerTrapKind6809.AmoreThan:
+                    case DebuggerTrapKind6809.Bequals:
+                    case DebuggerTrapKind6809.BlessThan:
+                    case DebuggerTrapKind6809.BmoreThan:
                         return this.val.ToString("X2");
                 }
                 return null;
@@ -262,6 +325,12 @@ namespace GuiEmu6809
             set {
                 switch (this.kind) {
                     case DebuggerTrapKind6809.Breakpoint:
+                    case DebuggerTrapKind6809.Sequals:
+                    case DebuggerTrapKind6809.SlessThan:
+                    case DebuggerTrapKind6809.SmoreThan:
+                    case DebuggerTrapKind6809.Uequals:
+                    case DebuggerTrapKind6809.UlessThan:
+                    case DebuggerTrapKind6809.UmoreThan:
                     case DebuggerTrapKind6809.Xequals:
                     case DebuggerTrapKind6809.XlessThan:
                     case DebuggerTrapKind6809.XmoreThan:
@@ -273,6 +342,9 @@ namespace GuiEmu6809
                     case DebuggerTrapKind6809.Aequals:
                     case DebuggerTrapKind6809.AlessThan:
                     case DebuggerTrapKind6809.AmoreThan:
+                    case DebuggerTrapKind6809.Bequals:
+                    case DebuggerTrapKind6809.BlessThan:
+                    case DebuggerTrapKind6809.BmoreThan:
                         this.val = Convert.ToByte(value, 16);
                         break;
                     default:

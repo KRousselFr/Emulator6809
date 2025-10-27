@@ -11,14 +11,49 @@
         /// Débordement du registre S.
         SPunderflow,
 
-        /// Valeur-cible pour le registre A (accumulateur).
+        /// Valeur-cible pour le registre A (accumulateur principal).
         Aequals,
 
-        /// Valeur inférieure à une référence pour le registre A (accumulateur).
+        /// Valeur inférieure à une référence pour le registre A
+        /// (premier accumulateur).
         AlessThan,
 
-        /// Valeur supérieure à une référence pour le registre A (accumulateur).
+        /// Valeur supérieure à une référence pour le registre A
+        /// (premier accumulateur).
         AmoreThan,
+
+        /// Valeur-cible pour le registre B (deuxième accumulateur).
+        Bequals,
+
+        /// Valeur inférieure à une référence pour le registre B
+        /// (deuxième accumulateur).
+        BlessThan,
+
+        /// Valeur supérieure à une référence pour le registre B
+        /// (deuxième accumulateur).
+        BmoreThan,
+
+        /// Valeur-cible pour le registre S (pointeur de pile système).
+        Sequals,
+
+        /// Valeur inférieure à une référence pour le registre S
+        /// (pointeur de pile système).
+        SlessThan,
+
+        /// Valeur supérieure à une référence pour le registre S
+        /// (pointeur de pile système).
+        SmoreThan,
+
+        /// Valeur-cible pour le registre U (pointeur de pile utilisateur).
+        Uequals,
+
+        /// Valeur inférieure à une référence pour le registre U
+        /// (pointeur de pile utilisateur).
+        UlessThan,
+
+        /// Valeur supérieure à une référence pour le registre U
+        /// (pointeur de pile utilisateur).
+        UmoreThan,
 
         /// Valeur-cible pour le registre X.
         Xequals,
@@ -39,5 +74,6 @@
         YmoreThan
     }
 }
+
 
 

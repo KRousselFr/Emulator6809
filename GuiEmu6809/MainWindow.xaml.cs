@@ -90,6 +90,9 @@ namespace GuiEmu6809
         // outil de formatage de la pile
         private StackFormatter6809 stkFmt;
 
+        // adresse de base de la pile
+        // (définie par la ROM moniteur au 'reset')
+        private ushort stackBase;
 
         // "délégué" de mise à jour de l'affichage
         private DelegateUpdateUI uiUpdater;
@@ -243,7 +246,7 @@ namespace GuiEmu6809
         private void UpdateStackView()
         {
             string stackContent =
-                    this.stkFmt.ListStackValues(0X2000,   // TODO ! En faire une variable !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                    this.stkFmt.ListStackValues(this.stackBase,
                                                 this.processor.RegisterS);
             this.tbStackView.Text = stackContent;
         }
@@ -368,9 +371,11 @@ namespace GuiEmu6809
 
         private void TbRegS_TextChanged(object sender, TextChangedEventArgs e)
         {
+            ushort sVal = HexToAddr(this.tbRegS.Text);
+            if (this.stackBase == 0) this.stackBase = sVal;
             if (!(this.guiDone)) return;
             /* change la valeur du registre S (pointeur de pile) */
-            this.processor.RegisterS = HexToAddr(this.tbRegS.Text);
+            this.processor.RegisterS = sVal;
             UpdateRegisterView();
             /* MàJ de la vue de la pile */
             UpdateStackView();

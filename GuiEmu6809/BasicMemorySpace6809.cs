@@ -25,7 +25,7 @@ namespace GuiEmu6809
 
         // valeurs numériques
         public const int MEMORY_SIZE = 65536;
-        public const ushort DEFAULT_ROM_START = 0xd000;
+        public const ushort DEFAULT_ROM_START = 0xb000;
 
 
         /* ========================== CHAMPS PRIVÉS ========================= */

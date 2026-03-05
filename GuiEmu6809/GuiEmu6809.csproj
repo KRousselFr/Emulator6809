@@ -59,6 +59,7 @@
     </Compile>
     <Compile Include="DebuggerTrap6809.cs" />
     <Compile Include="DebuggerTrapKind6809.cs" />
+    <Compile Include="MO5MemorySpace.cs" />
     <Compile Include="SpecificCommands.cs" />
     <Page Include="BreakpointWindow.xaml">
       <SubType>Designer</SubType>
